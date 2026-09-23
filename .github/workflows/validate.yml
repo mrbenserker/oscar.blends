@@ -24,6 +24,7 @@ jobs:
           node --check api/public-config.js
           node --check api/_mailer.js
           node --check api/email-test.js
+          node --check api/account-login.js
           node --check api/appointment-action.js
           node --check api/manage-appointment.js
           node --check api/automation.js
