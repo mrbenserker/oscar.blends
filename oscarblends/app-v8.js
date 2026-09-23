@@ -1,4 +1,4 @@
-let bookingRulesV8={min_notice_minutes:120,max_advance_days:60};
+let bookingRulesV8={min_notice_minutes:15,max_advance_days:60};
 
 const baseLoadRuntimeConfigV8=loadRuntimeConfig;
 loadRuntimeConfig=async function(){
