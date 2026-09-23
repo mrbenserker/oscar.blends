@@ -152,8 +152,11 @@
           <p class="panel-kicker">Demande envoyée</p>
           <h2>Ton créneau est réservé provisoirement.</h2>
           <p id="successRecap">Ta demande reste en attente jusqu’à la confirmation d’Oscar Blends.</p>
-          <div class="success-note">Pendant que la demande est en attente, le créneau n’est plus proposé aux autres clients. S’il est refusé ou expire, il redevient disponible.</div>
-          <button type="button" class="btn btn-secondary" id="newBooking">Faire une autre demande</button>
+          <div class="success-note">Pendant que la demande est en attente, le créneau n’est plus proposé aux autres clients. Garde ton lien de gestion pour déplacer ou annuler ta demande plus tard.</div>
+          <div class="success-actions">
+            <a class="btn btn-primary hidden" id="successManageLink" href="#">Gérer mon rendez-vous</a>
+            <button type="button" class="btn btn-secondary" id="newBooking">Faire une autre demande</button>
+          </div>
         </section>
       </div>
     </section>
@@ -208,5 +211,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
+  <script src="app-v8.js"></script>
 </body>
 </html>
