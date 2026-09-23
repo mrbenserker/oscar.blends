@@ -25,12 +25,14 @@ const WEEKDAYS = [
 
 async function loadRuntimeConfig(){
   try{
-    const r=await fetch('/api/public-config',{cache:'no-store'});
+    const r=await fetch(`/api/public-config?t=${Date.now()}`,{cache:'no-store'});
     if(r.ok){
       const runtime=await r.json();
       cfg={...cfg,...runtime};
       window.OSCAR_CONFIG=cfg;
       emailEnabled=Boolean(runtime.emailEnabled);
+      cfg.gmailUserConfigured=Boolean(runtime.gmailUserConfigured);
+      cfg.gmailPasswordConfigured=Boolean(runtime.gmailPasswordConfigured);
     }
   }catch(e){ console.warn('Configuration serveur indisponible, mode démo conservé.',e); }
   const publicKey=cfg.supabasePublishableKey||cfg.supabaseAnonKey;
@@ -551,12 +553,19 @@ function renderSettings(){
 function renderEmailState(){
   const el=$('#emailConfigState');
   const btn=$('#testEmailBtn');
+  if(btn) btn.disabled=false;
+
   if(emailEnabled){
-    el.textContent='Messagerie configurée : confirmation, rappel la veille et alertes de liste d’attente sont prêts.';
-    if(btn) btn.disabled=false;
+    el.textContent='Gmail est configuré. Utilise le bouton ci-dessous pour vérifier l’envoi réel.';
+    return;
+  }
+
+  const user=cfg.gmailUserConfigured;
+  const pass=cfg.gmailPasswordConfigured;
+  if(user===false||pass===false){
+    el.textContent=`Configuration Gmail incomplète dans Vercel — GMAIL_USER : ${user?'OK':'manquant'} · GMAIL_APP_PASSWORD : ${pass?'OK':'manquant'}.`;
   }else{
-    el.textContent='Messagerie non configurée dans Vercel. Les rendez-vous restent utilisables, mais aucun e-mail n’est envoyé.';
-    if(btn) btn.disabled=true;
+    el.textContent='La configuration Gmail n’a pas encore été détectée. Clique sur « Envoyer un e-mail test » pour obtenir le diagnostic exact.';
   }
 }
 
@@ -578,7 +587,7 @@ async function sendTestEmail(){
     showFlash(error.message||'Impossible d’envoyer le test e-mail.','error');
   }finally{
     const btn=$('#testEmailBtn');
-    if(btn){btn.disabled=!emailEnabled;btn.textContent='Envoyer un e-mail test';}
+    if(btn){btn.disabled=false;btn.textContent='Envoyer un e-mail test';}
   }
 }
 
