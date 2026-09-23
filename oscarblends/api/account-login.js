@@ -1,6 +1,7 @@
 const crypto=require('crypto');
 const {createClient}=require('@supabase/supabase-js');
 const {createMailer,isConfigured}=require('./_mailer');
+const {createLoginToken}=require('./_account-auth');
 
 const memoryRateLimit=new Map();
 
@@ -161,16 +162,9 @@ module.exports=async function handler(req,res){
     }
 
     const base=siteBase(req);
-    const redirectTo=base?`${base}/compte.html`:undefined;
-    const {data,error}=await db.auth.admin.generateLink({
-      type:'magiclink',
-      email,
-      options:redirectTo?{redirectTo}:undefined
-    });
-
-    if(error) throw error;
-    const actionLink=data?.properties?.action_link||data?.properties?.actionLink;
-    if(!actionLink) throw new Error('Lien de connexion introuvable');
+    if(!base) throw new Error('URL du site introuvable');
+    const loginToken=createLoginToken(email);
+    const actionLink=`${base}/api/account-auth?token=${encodeURIComponent(loginToken)}`;
 
     const mailer=createMailer();
     const mail=emailTemplate({email,actionLink,base});
