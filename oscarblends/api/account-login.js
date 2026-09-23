@@ -2,6 +2,8 @@ const crypto=require('crypto');
 const {createClient}=require('@supabase/supabase-js');
 const {createMailer,isConfigured}=require('./_mailer');
 
+const memoryRateLimit=new Map();
+
 function json(res,status,payload){
   res.status(status).setHeader('Content-Type','application/json; charset=utf-8');
   res.setHeader('Cache-Control','no-store');
@@ -31,40 +33,60 @@ function adminClient(){
   return createClient(url,key,{auth:{autoRefreshToken:false,persistSession:false}});
 }
 
+function memoryLimit(hash){
+  const now=Date.now();
+  const row=memoryRateLimit.get(hash);
+  if(row&&now-row.last<60000){
+    return {ok:false,retryAfter:Math.ceil((60000-(now-row.last))/1000)};
+  }
+  const windowStart=row&&now-row.windowStart<3600000?row.windowStart:now;
+  const count=row&&windowStart===row.windowStart?row.count:0;
+  if(count>=5) return {ok:false,retryAfter:3600};
+  memoryRateLimit.set(hash,{last:now,windowStart,count:count+1});
+  return {ok:true};
+}
+
 async function rateLimit(db,email){
   const hash=crypto.createHash('sha256').update(email).digest('hex');
   const now=new Date();
-  const {data,error}=await db
-    .from('account_login_requests')
-    .select('last_sent_at,window_started_at,sent_count')
-    .eq('email_hash',hash)
-    .maybeSingle();
 
-  if(error) throw error;
+  try{
+    const {data,error}=await db
+      .from('account_login_requests')
+      .select('last_sent_at,window_started_at,sent_count')
+      .eq('email_hash',hash)
+      .maybeSingle();
 
-  if(data?.last_sent_at){
-    const seconds=(now-new Date(data.last_sent_at))/1000;
-    if(seconds<60) return {ok:false,retryAfter:Math.ceil(60-seconds)};
-  }
+    if(error) throw error;
 
-  let windowStart=data?.window_started_at?new Date(data.window_started_at):null;
-  let count=Number(data?.sent_count||0);
-  if(!windowStart || now-windowStart>=60*60*1000){
-    windowStart=now;
-    count=0;
-  }
-  if(count>=5) return {ok:false,retryAfter:3600};
-
-  return {
-    ok:true,
-    hash,
-    next:{
-      email_hash:hash,
-      last_sent_at:now.toISOString(),
-      window_started_at:windowStart.toISOString(),
-      sent_count:count+1
+    if(data?.last_sent_at){
+      const seconds=(now-new Date(data.last_sent_at))/1000;
+      if(seconds<60) return {ok:false,retryAfter:Math.ceil(60-seconds)};
     }
-  };
+
+    let windowStart=data?.window_started_at?new Date(data.window_started_at):null;
+    let count=Number(data?.sent_count||0);
+    if(!windowStart || now-windowStart>=60*60*1000){
+      windowStart=now;
+      count=0;
+    }
+    if(count>=5) return {ok:false,retryAfter:3600};
+
+    return {
+      ok:true,
+      hash,
+      persistent:true,
+      next:{
+        email_hash:hash,
+        last_sent_at:now.toISOString(),
+        window_started_at:windowStart.toISOString(),
+        sent_count:count+1
+      }
+    };
+  }catch(error){
+    console.warn('Persistent account login rate limit unavailable, using memory fallback.',error?.message||error);
+    return {...memoryLimit(hash),hash,persistent:false};
+  }
 }
 
 function emailTemplate({email,actionLink,base}){
@@ -82,10 +104,10 @@ function emailTemplate({email,actionLink,base}){
 </head>
 <body style="margin:0;background:#efe3d2;font-family:Arial,Helvetica,sans-serif;color:#1d2925">
   <div style="max-width:620px;margin:0 auto;padding:30px 16px">
-    <div style="background:#2b574d;border-radius:22px 22px 0 0;padding:28px;text-align:center;color:#fff">
-      ${safeLogo?`<img src="${safeLogo}" alt="Oscar Blends" width="145" style="display:block;width:145px;max-width:65%;height:auto;margin:0 auto 18px;filter:brightness(0) invert(1)">`:''}
-      <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.78">Espace client Oscar Blends</div>
-      <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.08;font-weight:500;margin:10px 0 0">Ton lien de connexion</h1>
+    <div style="background:#fbf5ec;border:1px solid rgba(73,56,42,.13);border-bottom:0;border-radius:22px 22px 0 0;padding:26px;text-align:center;color:#2b574d">
+      ${safeLogo?`<img src="${safeLogo}" alt="Oscar Blends" width="145" style="display:block;width:145px;max-width:65%;height:auto;margin:0 auto 18px">`:''}
+      <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#3b7061;font-weight:700">Espace client Oscar Blends</div>
+      <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.08;font-weight:500;margin:10px 0 0;color:#2b574d">Ton lien de connexion</h1>
     </div>
     <div style="background:#fbf5ec;border:1px solid rgba(73,56,42,.13);border-top:0;border-radius:0 0 22px 22px;padding:28px">
       <p style="font-size:16px;line-height:1.65;margin:0 0 16px">Bonjour,</p>
@@ -154,10 +176,12 @@ module.exports=async function handler(req,res){
     const mail=emailTemplate({email,actionLink,base});
     await mailer.send({to:email,subject:mail.subject,html:mail.html,text:mail.text});
 
-    const {error:logError}=await db
-      .from('account_login_requests')
-      .upsert(limit.next,{onConflict:'email_hash'});
-    if(logError) console.error('account_login_requests',logError);
+    if(limit.persistent&&limit.next){
+      const {error:logError}=await db
+        .from('account_login_requests')
+        .upsert(limit.next,{onConflict:'email_hash'});
+      if(logError) console.error('account_login_requests',logError);
+    }
 
     return json(res,200,{ok:true});
   }catch(error){
