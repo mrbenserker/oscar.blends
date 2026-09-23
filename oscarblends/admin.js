@@ -550,8 +550,36 @@ function renderSettings(){
 
 function renderEmailState(){
   const el=$('#emailConfigState');
-  if(emailEnabled) el.textContent='L’envoi automatique est configuré : une confirmation peut être envoyée lors de la validation.';
-  else el.textContent='L’envoi automatique n’est pas encore configuré. Les rendez-vous peuvent être confirmés normalement et la partie e-mail sera branchée plus tard.';
+  const btn=$('#testEmailBtn');
+  if(emailEnabled){
+    el.textContent='Messagerie configurée : confirmation, rappel la veille et alertes de liste d’attente sont prêts.';
+    if(btn) btn.disabled=false;
+  }else{
+    el.textContent='Messagerie non configurée dans Vercel. Les rendez-vous restent utilisables, mais aucun e-mail n’est envoyé.';
+    if(btn) btn.disabled=true;
+  }
+}
+
+async function sendTestEmail(){
+  try{
+    const {data}=await db.auth.getSession();
+    const token=data?.session?.access_token;
+    if(!token) throw new Error('Ta session administrateur a expiré. Reconnecte-toi.');
+    const btn=$('#testEmailBtn');
+    if(btn){btn.disabled=true;btn.textContent='Envoi…';}
+    const response=await fetch('/api/email-test',{
+      method:'POST',
+      headers:{Authorization:`Bearer ${token}`}
+    });
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(payload.error||'Impossible d’envoyer le test');
+    showFlash(`E-mail test envoyé à ${payload.email}.`,'success');
+  }catch(error){
+    showFlash(error.message||'Impossible d’envoyer le test e-mail.','error');
+  }finally{
+    const btn=$('#testEmailBtn');
+    if(btn){btn.disabled=!emailEnabled;btn.textContent='Envoyer un e-mail test';}
+  }
 }
 
 async function callAppointmentAction(id,action){
@@ -740,6 +768,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   $('#closureForm').addEventListener('submit',saveClosure);
   $('#closureFullDay').addEventListener('change',()=>$('#closureTimes').classList.toggle('hidden',$('#closureFullDay').checked));
   $('#savePendingHold').addEventListener('click',savePendingHold);
+  $('#testEmailBtn').addEventListener('click',sendTestEmail);
   $('#saveSchedule').addEventListener('click',saveSchedule);
   $('#closureDate').min=parisDateKey();
 
