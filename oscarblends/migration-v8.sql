@@ -21,7 +21,7 @@ do $$ begin
 end $$;
 
 alter table public.booking_settings
-  add column if not exists min_notice_minutes integer not null default 120,
+  add column if not exists min_notice_minutes integer not null default 15,
   add column if not exists max_advance_days integer not null default 60;
 
 alter table public.appointments
@@ -89,7 +89,7 @@ create or replace function public.get_public_booking_rules()
 returns table(min_notice_minutes integer,max_advance_days integer)
 language sql stable security definer set search_path=public as $$
   select
-    coalesce(bs.min_notice_minutes,120),
+    coalesce(bs.min_notice_minutes,15),
     coalesce(bs.max_advance_days,60)
   from public.booking_settings bs
   where bs.id=1
@@ -113,7 +113,7 @@ begin
     where s.slug=p_service_slug and s.active=true
   ), rules as (
     select
-      coalesce(bs.min_notice_minutes,120) as min_notice_minutes,
+      coalesce(bs.min_notice_minutes,15) as min_notice_minutes,
       coalesce(bs.max_advance_days,60) as max_advance_days
     from public.booking_settings bs
     where bs.id=1
@@ -478,7 +478,7 @@ begin
   if v_id is null then raise exception 'Rendez-vous introuvable'; end if;
   if v_status not in ('pending','confirmed') then raise exception 'Ce rendez-vous ne peut plus être déplacé'; end if;
 
-  select coalesce(min_notice_minutes,120),coalesce(max_advance_days,60),coalesce(pending_hold_minutes,1440)
+  select coalesce(min_notice_minutes,15),coalesce(max_advance_days,60),coalesce(pending_hold_minutes,1440)
   into v_min_notice,v_max_days,v_hold
   from public.booking_settings where id=1;
 
