@@ -102,7 +102,7 @@ async function loadAppointment(){
 }
 
 function slotButton(slot){
-  return `<button type="button" class="slot" data-move-slot="${slot.slot}"><span>${slot.slot}</span>${slot.recommended?'<small>Conseillé</small>':''}</button>`;
+  return `<button type="button" class="slot" data-move-slot="${slot.slot}"><span>${slot.slot}</span></button>`;
 }
 
 async function loadMoveSlots(){
@@ -113,7 +113,7 @@ async function loadMoveSlots(){
   try{
     const {data,error}=await db.rpc('get_available_slots',{p_date:date,p_service_slug:appointment.services.slug});
     if(error) throw error;
-    const slots=(data||[]).map(x=>({slot:String(x.slot||x).slice(0,5),recommended:Boolean(x.recommended)})).filter(x=>x.slot);
+    const slots=(data||[]).map(x=>({slot:String(x.slot||x).slice(0,5)})).filter(x=>x.slot).sort((a,b)=>a.slot.localeCompare(b.slot));
     $('#manageMoveSlots').innerHTML=slots.length?`<div class="slot-grid">${slots.map(slotButton).join('')}</div>`:'<span class="small">Aucun autre créneau disponible ce jour.</span>';
   }catch(err){
     $('#manageMoveSlots').innerHTML='<span class="small">Impossible de charger les créneaux.</span>';
