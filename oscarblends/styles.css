@@ -847,3 +847,12 @@ body{
   .service-categories{gap:4px;padding:4px}
   .service-category{font-size:.72rem;padding:7px 5px}
 }
+
+
+/* Navigation entre les étapes de réservation */
+.step-navigation{display:flex;justify-content:flex-start;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.step-back-btn{min-height:44px;padding:0 16px;font-size:.78rem;box-shadow:none}
+@media(max-width:520px){
+  .step-navigation{justify-content:stretch}
+  .step-back-btn{width:100%}
+}
