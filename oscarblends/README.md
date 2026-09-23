@@ -1,4 +1,4 @@
-# Oscar Blends — V6 Planning
+# Oscar Blends — V8 Planning
 
 Cette version ne contient **aucun paiement en ligne**. Le site sert uniquement à demander, organiser et confirmer les rendez-vous.
 
@@ -12,8 +12,7 @@ Cette version ne contient **aucun paiement en ligne**. Le site sert uniquement �
 - Gestion des **indisponibilités** : journée entière ou plage horaire.
 - Horaires habituels modifiables depuis l’espace pro, jour par jour.
 - Base par défaut : **09h30–12h30**, reprise **14h00**, dernier départ **19h00**, lundi à samedi. **Dimanche fermé par défaut mais activable depuis l’espace pro.**
-- Algorithme de créneaux : les horaires qui remplissent le mieux la journée sont affichés en **Créneaux conseillés**.
-- Les autres créneaux possibles restent accessibles : on optimise sans empêcher un client de réserver un horaire moins parfait.
+- Les créneaux réellement disponibles sont affichés dans l’ordre chronologique, sans recommandation ni priorité artificielle.
 - Le lien « Espace pro » a été retiré du site public.
 - Mention de confidentialité ajoutée au formulaire client.
 - L’e-mail automatique reste optionnel : un rendez-vous peut être confirmé même si Gmail n’est pas encore configuré.
