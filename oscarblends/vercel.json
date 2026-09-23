@@ -30,6 +30,9 @@
     },
     "api/automation.js": {
       "maxDuration": 30
+    },
+    "api/email-test.js": {
+      "maxDuration": 10
     }
   },
   "crons": [
