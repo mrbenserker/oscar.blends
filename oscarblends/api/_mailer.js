@@ -17,8 +17,35 @@ function isConfigured(){
   return Boolean(config());
 }
 
-function darkModeSafeHtml(html=''){
+function applyOscarPalette(html=''){
   let out=String(html||'');
+
+  const replacements=[
+    // Fonds : palette officielle du site.
+    [/#efe3d2/gi,'#fafae7'],
+    [/#f4f1e8/gi,'#fafae7'],
+    [/#f7f4ec/gi,'#f0efdc'],
+    [/#fbf5ec/gi,'#fffdf8'],
+    [/#f7eee2/gi,'#fffdf8'],
+
+    // Ancien vert très sombre -> vert foncé officiel du site.
+    [/#18352d/gi,'#2b574d'],
+
+    // Textes : mêmes tons que le site.
+    [/#1d2925/gi,'#17211e'],
+    [/#1f2b27/gi,'#17211e'],
+    [/#665f56/gi,'#68736f'],
+    [/#746d63/gi,'#68736f'],
+    [/#6b756f/gi,'#68736f'],
+    [/#58635e/gi,'#68736f']
+  ];
+
+  for(const [pattern,value] of replacements) out=out.replace(pattern,value);
+  return out;
+}
+
+function darkModeSafeHtml(html=''){
+  let out=applyOscarPalette(html);
   if(!out) return out;
 
   const protection=`
@@ -39,15 +66,14 @@ function darkModeSafeHtml(html=''){
     }
   }
 
-  // Les gradients 1 couleur sont volontairement redondants :
-  // Outlook/Gmail mobile ont tendance à inverser background-color en mode sombre,
-  // mais conservent généralement les background-image.
+  // Force les fonds avec un dégradé uni pour limiter l'inversion
+  // automatique appliquée par Outlook/Gmail en mode sombre.
   out=out.replace(
     /background:(#[0-9a-fA-F]{3,8})(?![^;"']*!important)/g,
     'background-color:$1!important;background-image:linear-gradient($1,$1)!important'
   );
 
-  // Conserve les couleurs de texte explicites sans toucher aux background-color.
+  // Conserve les couleurs de texte explicites.
   out=out.replace(
     /(^|[;\s"'])color:(#[0-9a-fA-F]{3,8})(?!\s*!important)/g,
     '$1color:$2!important'
@@ -81,4 +107,4 @@ function createMailer(){
   };
 }
 
-module.exports={config,isConfigured,createMailer,darkModeSafeHtml};
+module.exports={config,isConfigured,createMailer,darkModeSafeHtml,applyOscarPalette};
