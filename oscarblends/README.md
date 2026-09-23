@@ -150,10 +150,11 @@ Exécuter une seule fois `migration-v8.sql` dans Supabase > SQL Editor après le
 
 ### Automatisations e-mail
 Le code est prêt dans `api/automation.js`. Les envois restent volontairement inactifs tant que la messagerie n'est pas configurée.
-Variables Vercel nécessaires pour les activer :
+Variables Vercel nécessaires pour les activer avec Gmail :
 - `GMAIL_USER`
 - `GMAIL_APP_PASSWORD`
 - `CRON_SECRET` (une valeur longue et aléatoire)
 - facultatif : `SITE_URL` si une URL personnalisée doit remplacer l'URL de production Vercel.
+- facultatif : `EMAIL_FROM` et `EMAIL_REPLY_TO`.
 
 Le cron Vercel est planifié chaque soir à 18:00 UTC.
