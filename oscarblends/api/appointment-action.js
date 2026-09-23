@@ -1,3 +1,4 @@
+const {createMailer,isConfigured}=require('./_mailer');
 function json(res, status, payload) {
   res.status(status).setHeader('Content-Type', 'application/json; charset=utf-8');
   res.end(JSON.stringify(payload));
@@ -147,35 +148,19 @@ function buildConfirmationEmail(appointment) {
 }
 
 async function sendConfirmationEmail(appointment) {
-  const gmailUser = String(process.env.GMAIL_USER || '').trim();
-  const gmailAppPassword = String(process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
-  if (!gmailUser) throw new Error('GMAIL_USER manquante dans Vercel');
-  if (!gmailAppPassword) throw new Error('GMAIL_APP_PASSWORD manquante dans Vercel');
   if (!appointment.email) throw new Error('Le client n’a pas d’adresse e-mail');
+  const mailer=createMailer();
+  if(!mailer) throw new Error('Messagerie non configurée dans Vercel');
 
-  // Chargé uniquement côté serveur. La dépendance est installée par Vercel via package.json.
-  const nodemailer = require('nodemailer');
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: gmailUser,
-      pass: gmailAppPassword
-    }
+  const mail=buildConfirmationEmail(appointment);
+  const info=await mailer.send({
+    to:appointment.email,
+    subject:mail.subject,
+    html:mail.html,
+    text:mail.text
   });
 
-  const mail = buildConfirmationEmail(appointment);
-  const info = await transporter.sendMail({
-    from: `Oscar Blends <${gmailUser}>`,
-    replyTo: gmailUser,
-    to: appointment.email,
-    subject: mail.subject,
-    html: mail.html,
-    text: mail.text
-  });
-
-  return { id: info.messageId || null };
+  return { id: info?.messageId || null };
 }
 
 module.exports = async function handler(req, res) {
@@ -235,8 +220,7 @@ module.exports = async function handler(req, res) {
       return json(res, 409, { error: 'Le rendez-vous doit être confirmé avant de renvoyer le mail' });
     }
 
-    const gmailConfigured = Boolean(String(process.env.GMAIL_USER || '').trim() && String(process.env.GMAIL_APP_PASSWORD || '').trim());
-    if (!gmailConfigured) {
+    if (!isConfigured()) {
       return json(res, 200, {
         ok: true,
         status: 'confirmed',
