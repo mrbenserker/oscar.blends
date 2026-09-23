@@ -7,9 +7,11 @@ const state = {
   appointments: [],
   closures: [],
   openingHours: [],
+  services: [],
   pendingHoldMinutes: 1440,
   agendaRange: 'today',
-  activeView: 'agenda'
+  activeView: 'dashboard',
+  clientSearch: ''
 };
 
 const $ = s => document.querySelector(s);
@@ -120,6 +122,24 @@ async function loadSettings(){
   if(error) throw error;
   state.pendingHoldMinutes=Number(data?.pending_hold_minutes||1440);
 }
+async function loadServices(){
+  if(isDemo){
+    state.services=[
+      {slug:'classique',name:'Le Classique',price_cents:2200,duration_minutes:50},
+      {slug:'barbe-clean',name:'Barbe Clean',price_cents:1500,duration_minutes:30},
+      {slug:'barbe-old-school',name:'Barbe Old School',price_cents:2300,duration_minutes:50},
+      {slug:'ptit-blend',name:"Le P'tit Blend",price_cents:1500,duration_minutes:40},
+      {slug:'rituel-royal',name:'Le Rituel Royal',price_cents:3800,duration_minutes:75},
+      {slug:'gentleman',name:'Le Gentleman',price_cents:3200,duration_minutes:65},
+      {slug:'mise-a-zero',name:'La Mise à Zéro',price_cents:1900,duration_minutes:30}
+    ];
+    return;
+  }
+  const {data,error}=await db.from('services').select('slug,name,price_cents,duration_minutes,active,sort_order').eq('active',true).order('sort_order',{ascending:true});
+  if(error) throw error;
+  state.services=data||[];
+}
+
 async function loadOpeningHours(){
   if(isDemo){
     try{
@@ -152,7 +172,7 @@ function demoScheduleToRows(schedule){
 
 async function loadAll(){
   try{
-    await Promise.all([loadAppointments(),loadClosures(),loadSettings(),loadOpeningHours()]);
+    await Promise.all([loadAppointments(),loadClosures(),loadSettings(),loadOpeningHours(),loadServices()]);
     renderEverything();
   }catch(error){
     console.error(error);
@@ -163,22 +183,30 @@ async function loadAll(){
 
 function renderEverything(){
   renderMetrics();
+  renderDashboard();
   renderAgenda();
   renderRequests();
+  renderClients();
   renderClosures();
   renderSettings();
   renderEmailState();
+  populateManualServices();
 }
 
 function renderMetrics(){
   const today=parisDateKey();
-  const weekEnd=addDaysKey(today,6);
   const active=state.appointments.filter(isActive);
-  $('#metricToday').textContent=active.filter(a=>appointmentDateKey(a)===today).length;
+  const todayList=active.filter(a=>appointmentDateKey(a)===today);
+  const confirmedToday=todayList.filter(a=>a.status==='confirmed');
+  const now=Date.now();
+  const next=active
+    .filter(a=>new Date(a.starts_at||`${a.date}T${a.time}`).getTime()>=now)
+    .sort((a,b)=>new Date(a.starts_at||`${a.date}T${a.time}`)-new Date(b.starts_at||`${b.date}T${b.time}`))[0];
+  $('#metricToday').textContent=todayList.length;
   $('#metricPending').textContent=state.appointments.filter(a=>a.status==='pending').length;
-  $('#metricWeek').textContent=active.filter(a=>{
-    const k=appointmentDateKey(a); return k>=today&&k<=weekEnd;
-  }).length;
+  $('#metricRevenue').textContent=`${(confirmedToday.reduce((sum,a)=>sum+Number(a.price_cents||0),0)/100).toLocaleString('fr-FR',{maximumFractionDigits:2})} €`;
+  $('#metricNext').textContent=next?fmtTime(next.starts_at):'—';
+  $('#metricNextName').textContent=next?(next.customer_name||'Client'):'Aucun à venir';
   const pending=state.appointments.filter(a=>a.status==='pending').length;
   $('#pendingPill').textContent=pending;
   $('#pendingPill').classList.toggle('hidden',pending===0);
@@ -270,6 +298,12 @@ function appointmentCard(a){
   }else if(a.status==='confirmed'){
     actions.push(`<button class="btn btn-secondary btn-small danger-outline" type="button" data-appt-action="cancel" data-id="${esc(a.id)}">Annuler le RDV</button>`);
   }
+  if(['pending','confirmed'].includes(a.status)){
+    actions.push(`<button class="btn btn-secondary btn-small" type="button" data-move-appt="${esc(a.id)}">Déplacer</button>`);
+  }
+  if(a.phone||a.email){
+    actions.push(`<button class="btn btn-secondary btn-small" type="button" data-client-history="${esc(clientKey(a))}">Historique</button>`);
+  }
   if(a.status==='confirmed'&&emailEnabled&&!a.confirmation_email_sent_at){
     actions.push(`<button class="btn btn-secondary btn-small" type="button" data-appt-action="resend_confirmation" data-id="${esc(a.id)}">Envoyer l’e-mail</button>`);
   }
@@ -290,6 +324,173 @@ function appointmentCard(a){
       ${actions.length?`<div class="appt-actions">${actions.join('')}</div>`:''}
     </div>
   </article>`;
+}
+
+
+function renderDashboard(){
+  const today=parisDateKey();
+  const todayList=state.appointments.filter(a=>isActive(a)&&appointmentDateKey(a)===today)
+    .sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+  const now=Date.now();
+  const next=todayList.find(a=>new Date(a.starts_at).getTime()>=now);
+  const confirmed=todayList.filter(a=>a.status==='confirmed');
+  const pending=todayList.filter(a=>a.status==='pending');
+  const revenue=confirmed.reduce((sum,a)=>sum+Number(a.price_cents||0),0)/100;
+  $('#dashboardDate').textContent=fmtDateKey(today);
+  $('#dashboardNext').innerHTML=next?
+    `<div class="dashboard-next-time">${esc(fmtTime(next.starts_at))}</div><strong>${esc(next.customer_name||'Client')}</strong><span>${esc(next.service_name||'Prestation')} · ${esc(durationLabel(next))}</span>`:
+    '<div class="empty-state compact"><strong>Aucun autre rendez-vous aujourd’hui.</strong></div>';
+  $('#dashboardSummary').innerHTML=`
+    <div><strong>${todayList.length}</strong><span>RDV actifs</span></div>
+    <div><strong>${pending.length}</strong><span>à confirmer</span></div>
+    <div><strong>${revenue.toLocaleString('fr-FR',{maximumFractionDigits:2})} €</strong><span>CA prévu</span></div>`;
+  $('#dashboardTodayList').innerHTML=todayList.length?todayList.map(appointmentCard).join(''):'<div class="agenda-empty-day"><strong>Journée libre</strong><span>Aucun rendez-vous pour le moment.</span></div>';
+}
+
+function clientKey(a){
+  const email=String(a.email||'').trim().toLowerCase();
+  if(email) return 'e:'+email;
+  const phone=safeTel(a.phone||'');
+  return 'p:'+phone;
+}
+function buildClients(){
+  const map=new Map();
+  state.appointments.forEach(a=>{
+    const key=clientKey(a);
+    if(key==='p:') return;
+    if(!map.has(key)) map.set(key,{key,name:a.customer_name||'Client',phone:a.phone||'',email:a.email||'',appointments:[]});
+    const client=map.get(key);
+    if((a.customer_name||'').length>(client.name||'').length) client.name=a.customer_name;
+    if(!client.phone&&a.phone) client.phone=a.phone;
+    if(!client.email&&a.email) client.email=a.email;
+    client.appointments.push(a);
+  });
+  return [...map.values()].map(client=>{
+    client.appointments.sort((a,b)=>new Date(b.starts_at||b.created_at)-new Date(a.starts_at||a.created_at));
+    client.total=client.appointments.length;
+    client.completedLike=client.appointments.filter(a=>a.status==='confirmed'&&new Date(a.starts_at)<new Date()).length;
+    client.cancelled=client.appointments.filter(a=>['cancelled','rejected'].includes(a.status)).length;
+    client.next=client.appointments.filter(a=>isActive(a)&&new Date(a.starts_at)>=new Date()).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at))[0]||null;
+    client.last=client.appointments.find(a=>new Date(a.starts_at)<new Date())||null;
+    return client;
+  }).sort((a,b)=>(b.next?1:0)-(a.next?1:0)||a.name.localeCompare(b.name,'fr'));
+}
+function renderClients(){
+  const root=$('#clientList');
+  if(!root) return;
+  const q=String(state.clientSearch||'').trim().toLowerCase();
+  let clients=buildClients();
+  if(q) clients=clients.filter(c=>[c.name,c.phone,c.email].some(v=>String(v||'').toLowerCase().includes(q)));
+  $('#clientCount').textContent=`${clients.length} client${clients.length>1?'s':''}`;
+  root.innerHTML=clients.length?clients.map(c=>`
+    <article class="client-card">
+      <div class="client-main"><strong>${esc(c.name)}</strong><span>${esc(c.phone||'')}${c.phone&&c.email?' · ':''}${esc(c.email||'')}</span></div>
+      <div class="client-meta"><span><b>${c.total}</b> réservation${c.total>1?'s':''}</span><span>${c.next?`Prochain : ${esc(fmtDateKey(appointmentDateKey(c.next),{day:'numeric',month:'short'}))} à ${esc(fmtTime(c.next.starts_at))}`:(c.last?`Dernière visite : ${esc(fmtDateKey(appointmentDateKey(c.last),{day:'numeric',month:'short'}))}`:'Nouveau client')}</span></div>
+      <button type="button" class="btn btn-secondary btn-small" data-client-history="${esc(c.key)}">Voir l’historique</button>
+    </article>`).join(''):'<div class="empty-state"><strong>Aucun client trouvé.</strong><span>Les clients apparaissent automatiquement dès leur première réservation.</span></div>';
+}
+function openClientHistory(key){
+  const client=buildClients().find(c=>c.key===key);
+  if(!client) return;
+  $('#clientHistoryName').textContent=client.name;
+  $('#clientHistoryContact').textContent=[client.phone,client.email].filter(Boolean).join(' · ');
+  $('#clientHistoryStats').innerHTML=`
+    <div><strong>${client.total}</strong><span>réservations</span></div>
+    <div><strong>${client.completedLike}</strong><span>visites passées</span></div>
+    <div><strong>${client.cancelled}</strong><span>annulations/refus</span></div>`;
+  $('#clientHistoryList').innerHTML=client.appointments.map(a=>`
+    <article class="client-history-row">
+      <div><strong>${esc(fmtDateKey(appointmentDateKey(a)))} · ${esc(fmtRange(a))}</strong><span>${esc(a.service_name||'Prestation')} · ${esc(priceLabel(a))}</span></div>
+      <span class="badge ${esc(a.status)}">${esc(statusLabel(a))}</span>
+    </article>`).join('');
+  $('#clientHistoryDialog').showModal();
+}
+
+function populateManualServices(){
+  const select=$('#manualService');
+  if(!select) return;
+  const current=select.value;
+  select.innerHTML='<option value="">Choisir une prestation</option>'+state.services.map(s=>`<option value="${esc(s.slug)}">${esc(s.name)} · ${(Number(s.price_cents||0)/100).toLocaleString('fr-FR',{maximumFractionDigits:2})} € · ${Number(s.duration_minutes)} min</option>`).join('');
+  if(current&&state.services.some(s=>s.slug===current)) select.value=current;
+}
+function selectedManualService(){
+  return state.services.find(s=>s.slug===$('#manualService').value)||null;
+}
+function updateManualPreview(){
+  const s=selectedManualService(),date=$('#manualDate').value,time=$('#manualTime').value;
+  $('#manualAppointmentPreview').innerHTML=s&&date&&time?`<strong>${esc(fmtDateKey(date))} à ${esc(time)}</strong><span>${esc(s.name)} · ${Number(s.duration_minutes)} min · ${(Number(s.price_cents)/100).toLocaleString('fr-FR',{maximumFractionDigits:2})} €</span>`:'';
+}
+function openManualDialog(){
+  $('#manualAppointmentForm').reset();
+  $('#manualDate').min=parisDateKey();
+  $('#manualDate').value=parisDateKey();
+  populateManualServices();
+  updateManualPreview();
+  $('#manualAppointmentDialog').showModal();
+}
+async function saveManualAppointment(e){
+  e.preventDefault();
+  const service=selectedManualService();
+  const date=$('#manualDate').value,time=$('#manualTime').value;
+  const first=$('#manualFirstName').value.trim(),last=$('#manualLastName').value.trim();
+  const phone=$('#manualPhone').value.trim(),email=$('#manualEmail').value.trim().toLowerCase();
+  const notes=$('#manualNotes').value.trim();
+  if(!service||!date||!time||!first||!last||!phone||!email) return showFlash('Complète tous les champs obligatoires.','error');
+  try{
+    if(isDemo){
+      const start=new Date(`${date}T${time}:00`);
+      const end=new Date(start.getTime()+Number(service.duration_minutes)*60000);
+      const list=expireDemo();
+      if(list.some(a=>isActive(a)&&new Date(a.starts_at)<end&&new Date(a.ends_at)>start)) throw new Error('Ce créneau chevauche déjà un autre rendez-vous.');
+      list.push({id:crypto.randomUUID(),starts_at:start.toISOString(),ends_at:end.toISOString(),customer_name:`${first} ${last}`,phone,email,notes,status:'confirmed',service_slug:service.slug,service_name:service.name,price_cents:service.price_cents,duration_minutes:service.duration_minutes});
+      setDemoAppointments(list);
+    }else{
+      const {error}=await db.rpc('admin_create_appointment',{p_service_slug:service.slug,p_date:date,p_time:time,p_customer_name:`${first} ${last}`,p_phone:phone,p_email:email,p_notes:notes||null});
+      if(error) throw error;
+    }
+    $('#manualAppointmentDialog').close();
+    showFlash('Rendez-vous ajouté au planning.','success');
+    await loadAll();
+  }catch(error){ showFlash(error.message||'Impossible d’ajouter ce rendez-vous.','error'); }
+}
+function openMoveDialog(id){
+  const a=state.appointments.find(x=>String(x.id)===String(id));
+  if(!a) return;
+  $('#moveAppointmentId').value=a.id;
+  $('#moveAppointmentLabel').textContent=`${a.customer_name||'Client'} · ${a.service_name||'Prestation'} · ${durationLabel(a)}`;
+  const date=appointmentDateKey(a);
+  $('#moveDate').min=parisDateKey();
+  $('#moveDate').value=date;
+  $('#moveTime').value=fmtTime(a.starts_at);
+  updateMovePreview();
+  $('#moveAppointmentDialog').showModal();
+}
+function updateMovePreview(){
+  const id=$('#moveAppointmentId').value,a=state.appointments.find(x=>String(x.id)===String(id));
+  const date=$('#moveDate').value,time=$('#moveTime').value;
+  $('#moveAppointmentPreview').innerHTML=a&&date&&time?`<strong>Nouveau créneau : ${esc(fmtDateKey(date))} à ${esc(time)}</strong><span>${esc(a.service_name||'Prestation')} · ${esc(durationLabel(a))}</span>`:'';
+}
+async function saveMoveAppointment(e){
+  e.preventDefault();
+  const id=$('#moveAppointmentId').value,date=$('#moveDate').value,time=$('#moveTime').value;
+  if(!id||!date||!time) return;
+  try{
+    if(isDemo){
+      const list=expireDemo(),a=list.find(x=>String(x.id)===String(id));
+      if(!a) throw new Error('Rendez-vous introuvable');
+      const duration=Number(a.duration_minutes||a.duration||0);
+      const start=new Date(`${date}T${time}:00`),end=new Date(start.getTime()+duration*60000);
+      if(list.some(x=>String(x.id)!==String(id)&&isActive(x)&&new Date(x.starts_at)<end&&new Date(x.ends_at)>start)) throw new Error('Ce créneau chevauche déjà un autre rendez-vous.');
+      a.starts_at=start.toISOString(); a.ends_at=end.toISOString();
+      setDemoAppointments(list);
+    }else{
+      const {error}=await db.rpc('admin_move_appointment',{p_id:id,p_date:date,p_time:time});
+      if(error) throw error;
+    }
+    $('#moveAppointmentDialog').close();
+    showFlash('Rendez-vous déplacé.','success');
+    await loadAll();
+  }catch(error){ showFlash(error.message||'Impossible de déplacer ce rendez-vous.','error'); }
 }
 
 function renderRequests(){
@@ -510,14 +711,28 @@ async function logout(){ if(!isDemo) await db.auth.signOut(); showLogin(); }
 document.addEventListener('click',e=>{
   const actionBtn=e.target.closest('[data-appt-action]');
   if(actionBtn) handleAppointmentAction(actionBtn.dataset.id,actionBtn.dataset.apptAction);
+  const moveBtn=e.target.closest('[data-move-appt]');
+  if(moveBtn) openMoveDialog(moveBtn.dataset.moveAppt);
+  const clientBtn=e.target.closest('[data-client-history]');
+  if(clientBtn) openClientHistory(clientBtn.dataset.clientHistory);
   const closureBtn=e.target.closest('[data-delete-closure]');
   if(closureBtn) deleteClosure(closureBtn.dataset.deleteClosure);
+  const closeBtn=e.target.closest('[data-close-dialog]');
+  if(closeBtn) document.getElementById(closeBtn.dataset.closeDialog)?.close();
+  if(e.target.closest('[data-go-agenda]')) switchView('agenda');
 });
 
 document.addEventListener('DOMContentLoaded',async()=>{
   await loadRuntimeConfig();
   $('#loginForm').addEventListener('submit',login);
   $('#logoutBtn').addEventListener('click',logout);
+  $('#openManualBtn').addEventListener('click',openManualDialog);
+  $('#dashboardAddBtn').addEventListener('click',openManualDialog);
+  $('#manualAppointmentForm').addEventListener('submit',saveManualAppointment);
+  $('#moveAppointmentForm').addEventListener('submit',saveMoveAppointment);
+  ['manualService','manualDate','manualTime'].forEach(id=>$('#'+id).addEventListener('input',updateManualPreview));
+  ['moveDate','moveTime'].forEach(id=>$('#'+id).addEventListener('input',updateMovePreview));
+  $('#clientSearch').addEventListener('input',e=>{state.clientSearch=e.target.value;renderClients();});
   $('#closureForm').addEventListener('submit',saveClosure);
   $('#closureFullDay').addEventListener('change',()=>$('#closureTimes').classList.toggle('hidden',$('#closureFullDay').checked));
   $('#savePendingHold').addEventListener('click',savePendingHold);
@@ -532,11 +747,11 @@ document.addEventListener('DOMContentLoaded',async()=>{
     showLogin();
   }else{
     const {data}=await db.auth.getSession();
-    if(data.session){ showAdmin(); await loadAll(); } else showLogin();
+    if(data.session){ showAdmin(); await loadAll(); switchView('dashboard'); } else showLogin();
   }
 
   window.setInterval(async()=>{
     if($('#adminView').classList.contains('hidden')) return;
-    try{ await loadAppointments(); renderMetrics(); renderAgenda(); renderRequests(); }catch{}
+    try{ await loadAppointments(); renderMetrics(); renderDashboard(); renderAgenda(); renderRequests(); renderClients(); }catch{}
   },60000);
 });
