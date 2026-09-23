@@ -856,3 +856,46 @@ body{
   .step-navigation{justify-content:stretch}
   .step-back-btn{width:100%}
 }
+
+
+/* Galerie réalisations : carrousel tactile sur mobile */
+@media(max-width:768px){
+  .realisations .container{
+    overflow:visible;
+  }
+
+  .gallery-grid{
+    display:grid;
+    grid-auto-flow:column;
+    grid-template-columns:none;
+    grid-auto-columns:84%;
+    gap:12px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scroll-snap-type:x mandatory;
+    scroll-padding-inline:1px;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding:2px 1px 8px;
+    margin-right:-18px;
+    padding-right:18px;
+  }
+
+  .gallery-grid::-webkit-scrollbar{
+    display:none;
+  }
+
+  .photo-slot{
+    width:100%;
+    scroll-snap-align:start;
+    scroll-snap-stop:always;
+    aspect-ratio:3/4;
+  }
+
+  .photo-slot img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+}
