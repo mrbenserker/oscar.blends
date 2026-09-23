@@ -267,6 +267,29 @@ function updateFinalSummary(){
   $('#mobileRecapMeta').textContent=formatLongDate(selectedDate,`${selectedSlot} – ${endTime}`);
 }
 
+function returnToServices(){
+  selectedDate=null;
+  selectedSlot=null;
+  currentStep=1;
+
+  $('[data-step-panel]').forEach(panel=>{
+    panel.classList.toggle('hidden',Number(panel.dataset.stepPanel)!==1);
+  });
+  $('.progress-step').forEach(el=>{
+    const n=Number(el.dataset.progress);
+    el.classList.toggle('active',n===1);
+    el.classList.toggle('done',false);
+  });
+
+  $('#mobileSubmitWrap')?.classList.add('hidden');
+  document.body.classList.remove('has-mobile-submit');
+
+  const step1=$('[data-step-panel="1"]');
+  if(step1){
+    requestAnimationFrame(()=>step1.scrollIntoView({behavior:'smooth',block:'start'}));
+  }
+}
+
 function goToStep(step,scroll=false){
   currentStep=step;
   $$('[data-step-panel]').forEach(p=>p.classList.toggle('hidden',Number(p.dataset.stepPanel)!==step));
@@ -398,13 +421,19 @@ document.addEventListener('DOMContentLoaded',async()=>{
   const dateInput=$('#dateInput');
   dateInput.min=localDateKey(new Date());
   dateInput.addEventListener('change',()=>{ if(dateInput.value) selectDate(dateInput.value); });
-  $('#changeService').addEventListener('click',()=>goToStep(1,true));
-  $('#backToServices')?.addEventListener('click',()=>goToStep(1,true));
+  $('#changeService').addEventListener('click',returnToServices);
+  $('#backToServices')?.addEventListener('click',returnToServices);
   $('#backToSlots').addEventListener('click',()=>goToStep(2,true));
   $('#bookingForm').addEventListener('submit',submitBooking);
   $('#mobileSubmit').addEventListener('click',()=>$('#bookingForm').requestSubmit());
   $('#newBooking').addEventListener('click',resetBooking);
   $$('.instagram-link').forEach(a=>a.href=cfg.instagramUrl||'#');
   if(isDemo) $('#demoNotice').classList.remove('hidden');
+  document.addEventListener('click',event=>{
+    const back=event.target.closest('[data-return-services]');
+    if(!back) return;
+    event.preventDefault();
+    returnToServices();
+  });
   window.addEventListener('scroll',()=>$('.header')?.classList.toggle('scrolled',window.scrollY>6));
 });
