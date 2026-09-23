@@ -292,8 +292,8 @@ function returnToServices(){
 
 function goToStep(step,scroll=false){
   currentStep=step;
-  $$$('[data-step-panel]').forEach(p=>p.classList.toggle('hidden',Number(p.dataset.stepPanel)!==step));
-  $$$('.progress-step').forEach(el=>{
+  $$('[data-step-panel]').forEach(p=>p.classList.toggle('hidden',Number(p.dataset.stepPanel)!==step));
+  $$('.progress-step').forEach(el=>{
     const n=Number(el.dataset.progress);
     el.classList.toggle('active',n===step);
     el.classList.toggle('done',n<step);
@@ -374,11 +374,11 @@ async function submitBooking(e){
       manageLink.href=`/manage.html?t=${encodeURIComponent(lastManagementToken)}`;
       manageLink.classList.remove('hidden');
     }
-    $$$('[data-step-panel]').forEach(p=>p.classList.add('hidden'));
+    $$('[data-step-panel]').forEach(p=>p.classList.add('hidden'));
     $('#successPanel').classList.remove('hidden');
     $('#mobileSubmitWrap').classList.add('hidden');
     document.body.classList.remove('has-mobile-submit');
-    $$$('.progress-step').forEach(el=>el.classList.add('done'));
+    $$('.progress-step').forEach(el=>el.classList.add('done'));
     $('#successPanel').scrollIntoView({behavior:'smooth',block:'start'});
   }catch(err){
     console.error(err);
