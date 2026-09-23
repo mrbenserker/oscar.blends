@@ -56,8 +56,10 @@ async function sendReminder(mail,a){
 }
 
 async function processReminders(mail){
-  const from=new Date(Date.now()+22*60*60*1000).toISOString();
-  const to=new Date(Date.now()+26*60*60*1000).toISOString();
+  // Le cron tourne une fois par jour en début de soirée.
+  // Cette fenêtre couvre les rendez-vous du lendemain aux horaires habituels du salon.
+  const from=new Date(Date.now()+10*60*60*1000).toISOString();
+  const to=new Date(Date.now()+30*60*60*1000).toISOString();
   const rows=await supabaseRequest(
     `/rest/v1/appointments?status=eq.confirmed&reminder_email_sent_at=is.null&starts_at=gte.${encodeURIComponent(from)}&starts_at=lt.${encodeURIComponent(to)}&select=id,customer_name,email,starts_at,management_token,services(name)&order=starts_at.asc`
   );
