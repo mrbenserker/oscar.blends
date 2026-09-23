@@ -366,7 +366,7 @@ async function submitBooking(e){
       manageLink.href=`/manage.html?t=${encodeURIComponent(lastManagementToken)}`;
       manageLink.classList.remove('hidden');
     }
-    $('[data-step-panel]').forEach(p=>p.classList.add('hidden'));
+    $$('[data-step-panel]').forEach(p=>p.classList.add('hidden'));
     $('#successPanel').classList.remove('hidden');
     $('#mobileSubmitWrap').classList.add('hidden');
     document.body.classList.remove('has-mobile-submit');
