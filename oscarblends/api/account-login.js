@@ -186,6 +186,22 @@ module.exports=async function handler(req,res){
     return json(res,200,{ok:true});
   }catch(error){
     console.error(error);
+    const message=String(error?.message||'').toLowerCase();
+    const code=String(error?.code||error?.error_code||'').toLowerCase();
+    const isRateLimit=
+      Number(error?.status)===429 ||
+      message.includes('rate limit') ||
+      code.includes('rate_limit') ||
+      code.includes('over_email_send_rate_limit');
+
+    if(isRateLimit){
+      res.setHeader('Retry-After','60');
+      return json(res,429,{
+        error:'Un lien de connexion vient déjà d’être généré. Attends environ 1 minute avant de recommencer.',
+        retryAfter:60
+      });
+    }
+
     return json(res,500,{error:'Impossible d’envoyer le lien pour le moment. Réessaie dans quelques instants.'});
   }
 };
