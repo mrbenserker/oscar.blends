@@ -116,12 +116,12 @@ for each row execute function public.set_updated_at();
 
 insert into public.services(slug,name,description,price_cents,duration_minutes,display_duration,sort_order)
 values
-('classique','Le Classique','Coupe signature adaptée au coiffage, conseils personnalisés et finition produit.',2200,50,'50 min',1),
+('classique','Le Classique','Coupe signature adaptée au coiffage, conseils personnalisés et finition produit.',2200,40,'40 min',1),
 ('barbe-clean','Barbe Clean','Taille de barbe à la tondeuse avec finitions nettes et conseils d’entretien.',1500,30,'30 min',2),
-('barbe-old-school','Barbe Old School','Taille de barbe + rasage à l’ancienne, serviettes chaudes.',2300,50,'50 min',3),
-('ptit-blend','Le P''tit Blend','Coupe garçon de 2 à 12 ans, adaptée à l’âge et finitions naturelles.',1500,40,'40 min',4),
-('rituel-royal','Le Rituel Royal','Coupe signature + taille de barbe + rasage à l’ancienne à la serviette chaude.',3800,75,'1 h 15',5),
-('gentleman','Le Gentleman','Coupe signature + taille de barbe, mise en forme complète.',3200,65,'65 min',6),
+('barbe-old-school','Barbe Old School','Taille de barbe + rasage à l’ancienne, serviettes chaudes.',2300,40,'40 min',3),
+('ptit-blend','Le P''tit Blend','Coupe garçon de 2 à 12 ans, adaptée à l’âge et finitions naturelles.',1500,30,'30 min',4),
+('rituel-royal','Le Rituel Royal','Coupe signature + taille de barbe + rasage à l’ancienne à la serviette chaude.',3800,65,'65 min',5),
+('gentleman','Le Gentleman','Coupe signature + taille de barbe, mise en forme complète.',3200,50,'50 min',6),
 ('mise-a-zero','La Mise à Zéro','Rasage intégral avec soins apaisants et finition nette.',1900,30,'30 min',7)
 on conflict (slug) do update set
   name=excluded.name,
