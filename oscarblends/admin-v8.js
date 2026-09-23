@@ -1,7 +1,7 @@
 const v8State={
   waitlist:[],
   exceptionalOpenings:[],
-  bookingRules:{min_notice_minutes:120,max_advance_days:60},
+  bookingRules:{min_notice_minutes:15,max_advance_days:60},
   services:[]
 };
 
@@ -78,6 +78,8 @@ function injectAdminV8UI(){
         <div class="setting-control booking-rules-controls">
           <label>Délai minimum
             <select id="minNoticeSelect">
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
               <option value="60">1 heure</option>
               <option value="120">2 heures</option>
               <option value="180">3 heures</option>
@@ -148,7 +150,7 @@ async function loadV8Data(){
   if(isDemo){
     v8State.waitlist=JSON.parse(localStorage.getItem('oscar_demo_waitlist')||'[]');
     v8State.exceptionalOpenings=JSON.parse(localStorage.getItem('oscar_demo_exceptional_openings')||'[]');
-    v8State.bookingRules=JSON.parse(localStorage.getItem('oscar_demo_booking_rules')||'null')||{min_notice_minutes:120,max_advance_days:60};
+    v8State.bookingRules=JSON.parse(localStorage.getItem('oscar_demo_booking_rules')||'null')||{min_notice_minutes:15,max_advance_days:60};
     v8State.services=(state.services||[]).map((s,i)=>({...s,id:s.id||s.slug||String(i),buffer_after_minutes:Number(s.buffer_after_minutes||0)}));
     return;
   }
@@ -165,7 +167,7 @@ async function loadV8Data(){
   if(services.error) throw services.error;
   v8State.waitlist=waitlist.data||[];
   v8State.exceptionalOpenings=openings.data||[];
-  v8State.bookingRules=rules.data||{min_notice_minutes:120,max_advance_days:60};
+  v8State.bookingRules=rules.data||{min_notice_minutes:15,max_advance_days:60};
   v8State.services=services.data||[];
   state.services=v8State.services.filter(s=>s.active!==false);
 }
@@ -435,7 +437,7 @@ function renderBookingRulesV8(){
   const min=document.querySelector('#minNoticeSelect');
   const max=document.querySelector('#maxAdvanceSelect');
   if(!min||!max) return;
-  min.value=String(v8State.bookingRules.min_notice_minutes||120);
+  min.value=String(v8State.bookingRules.min_notice_minutes||15);
   max.value=String(v8State.bookingRules.max_advance_days||60);
 }
 
