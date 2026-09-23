@@ -16,6 +16,14 @@
     {
       "source": "/manage/",
       "destination": "/manage.html"
+    },
+    {
+      "source": "/compte",
+      "destination": "/compte.html"
+    },
+    {
+      "source": "/compte/",
+      "destination": "/compte.html"
     }
   ],
   "functions": {
