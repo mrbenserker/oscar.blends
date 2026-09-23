@@ -41,9 +41,22 @@ module.exports=async function handler(req,res){
   try{
     const user=await requireAdmin(req);
     if(!user) return json(res,401,{error:'Connexion administrateur requise'});
-    if(!isConfigured()) return json(res,409,{error:'Messagerie non configurée dans Vercel'});
+    if(!isConfigured()){
+      const userConfigured=Boolean(String(process.env.GMAIL_USER||'').trim());
+      const passwordConfigured=Boolean(String(process.env.GMAIL_APP_PASSWORD||'').trim());
+      return json(res,409,{
+        error:`Configuration Gmail incomplète dans Vercel — GMAIL_USER : ${userConfigured?'OK':'manquant'} · GMAIL_APP_PASSWORD : ${passwordConfigured?'OK':'manquant'}`
+      });
+    }
 
     const mailer=createMailer();
+    try{
+      await mailer.transporter.verify();
+    }catch(error){
+      const message=error instanceof Error?error.message:'Connexion Gmail impossible';
+      return json(res,502,{error:`Connexion Gmail refusée : ${message}`});
+    }
+
     const info=await mailer.send({
       to:user.email,
       subject:'Test e-mail Oscar Blends ✓',
