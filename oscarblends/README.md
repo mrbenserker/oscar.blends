@@ -157,3 +157,23 @@ Variables Vercel nécessaires pour les activer avec Gmail :
 - facultatif : `EMAIL_FROM` et `EMAIL_REPLY_TO`.
 
 Le cron Vercel est planifié chaque soir à 18:00 UTC.
+
+
+## Espace client
+
+L’espace client est disponible sur `/compte` et reste facultatif : un client peut toujours réserver sans créer de compte.
+
+Fonctionnement :
+- connexion sans mot de passe par lien e-mail Supabase Auth ;
+- les rendez-vous existants correspondant à l’adresse e-mail vérifiée sont rattachés automatiquement ;
+- affichage des rendez-vous à venir et de l’historique ;
+- accès au déplacement / annulation via le lien privé existant ;
+- bouton pour reprendre la même prestation ;
+- une nouvelle réservation faite alors que le client est connecté est rattachée automatiquement si l’e-mail de réservation correspond à l’e-mail du compte.
+
+### Activation Supabase
+
+1. Exécuter `migration-client-account.sql` dans **Supabase > SQL Editor**.
+2. Dans **Authentication > URL Configuration**, configurer l’URL publique du site comme **Site URL** et autoriser le retour vers `/compte.html` dans les **Redirect URLs**.
+3. Vérifier que l’envoi d’e-mails Supabase Auth est autorisé pour les connexions par lien magique.
+
