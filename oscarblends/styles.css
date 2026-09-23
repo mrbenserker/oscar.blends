@@ -827,3 +827,12 @@ body{
     min-width:0;
   }
 }
+
+
+/* E-mails automatiques */
+.email-settings-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.email-settings-actions .small{line-height:1.4}
+@media(max-width:520px){
+  .email-settings-actions{align-items:stretch;flex-direction:column}
+  .email-settings-actions .btn{width:100%}
+}
