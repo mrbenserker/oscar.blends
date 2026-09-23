@@ -1483,7 +1483,13 @@ begin
     service_id,starts_at,ends_at,blocked_until,customer_name,phone,email,notes,status,expires_at,customer_user_id
   ) values(
     v_service.id,v_start,v_end,v_blocked_until,trim(p_customer_name),trim(p_phone),lower(trim(p_email)),
-    nullif(trim(coalesce(p_notes,'')),''),'pending',v_expires,auth.uid()
+    nullif(trim(coalesce(p_notes,'')),''),'pending',v_expires,
+    case
+      when auth.uid() is not null
+       and lower(trim(coalesce(auth.jwt()->>'email','')))=lower(trim(p_email))
+      then auth.uid()
+      else null
+    end
   ) returning management_token into v_token;
 
   return v_token;
