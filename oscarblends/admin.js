@@ -105,7 +105,11 @@ function setDemoAppointments(list){ localStorage.setItem('oscar_demo_appointment
 
 async function loadAppointments(){
   if(isDemo){ state.appointments=expireDemo(); return; }
-  await db.rpc('expire_pending_appointments').catch(()=>{});
+  try {
+    await db.rpc('expire_pending_appointments');
+  } catch (error) {
+    console.warn('Expiration automatique temporairement indisponible.', error);
+  }
   const {data,error}=await db.from('appointments_admin').select('*').order('starts_at',{ascending:true});
   if(error) throw error;
   state.appointments=data||[];
