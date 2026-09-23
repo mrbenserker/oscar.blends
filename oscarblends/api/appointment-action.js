@@ -26,13 +26,22 @@ function formatAppointment(startsAt, durationMinutes) {
   };
 }
 
-async function supabaseRequest(path, options = {}) {
+function serverSupabaseConfig() {
   const base = process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!base || !serviceKey) throw new Error('Configuration Supabase serveur manquante');
+  const apiKey =
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!base || !apiKey) throw new Error('Configuration Supabase serveur manquante');
+  return { base, apiKey };
+}
 
+async function supabaseRequest(path, accessToken, options = {}) {
+  const { base, apiKey } = serverSupabaseConfig();
   const headers = {
-    apikey: serviceKey,
+    apikey: apiKey,
+    Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'application/json',
     ...(options.headers || {})
   };
@@ -43,18 +52,16 @@ async function supabaseRequest(path, options = {}) {
     try { data = JSON.parse(text); } catch { data = text; }
   }
   if (!response.ok) {
-    const message = data?.message || data?.error_description || data?.hint || `Supabase HTTP ${response.status}`;
+    const message = data?.message || data?.error_description || data?.hint || data?.details || `Supabase HTTP ${response.status}`;
     throw new Error(message);
   }
   return data;
 }
 
 async function getAuthenticatedUser(accessToken) {
-  const base = process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!base || !serviceKey) throw new Error('Configuration Supabase serveur manquante');
+  const { base, apiKey } = serverSupabaseConfig();
   const response = await fetch(`${base}/auth/v1/user`, {
-    headers: { apikey: serviceKey, Authorization: `Bearer ${accessToken}` }
+    headers: { apikey: apiKey, Authorization: `Bearer ${accessToken}` }
   });
   if (!response.ok) return null;
   return response.json();
@@ -64,21 +71,26 @@ async function requireAdmin(req) {
   const authorization = req.headers.authorization || '';
   const match = authorization.match(/^Bearer\s+(.+)$/i);
   if (!match) return null;
-  const user = await getAuthenticatedUser(match[1]);
+  const accessToken = match[1];
+  const user = await getAuthenticatedUser(accessToken);
   if (!user?.id) return null;
-  const admins = await supabaseRequest(`/rest/v1/admins?user_id=eq.${encodeURIComponent(user.id)}&select=user_id&limit=1`);
-  return Array.isArray(admins) && admins.length ? user : null;
+  const admins = await supabaseRequest(
+    `/rest/v1/admins?user_id=eq.${encodeURIComponent(user.id)}&select=user_id&limit=1`,
+    accessToken
+  );
+  return Array.isArray(admins) && admins.length ? { user, accessToken } : null;
 }
 
-async function getAppointment(id) {
+async function getAppointment(id, accessToken) {
   const rows = await supabaseRequest(
-    `/rest/v1/appointments?id=eq.${encodeURIComponent(id)}&select=id,status,customer_name,email,phone,starts_at,ends_at,expires_at,confirmation_email_sent_at,confirmation_email_id,confirmation_email_error,management_token,services(slug,name,price_cents,duration_minutes)&limit=1`
+    `/rest/v1/appointments?id=eq.${encodeURIComponent(id)}&select=id,status,customer_name,email,phone,starts_at,ends_at,expires_at,confirmation_email_sent_at,confirmation_email_id,confirmation_email_error,management_token,services(slug,name,price_cents,duration_minutes)&limit=1`,
+    accessToken
   );
   return Array.isArray(rows) ? rows[0] : null;
 }
 
-async function patchAppointment(id, patch) {
-  const rows = await supabaseRequest(`/rest/v1/appointments?id=eq.${encodeURIComponent(id)}&select=*`, {
+async function patchAppointment(id, patch, accessToken) {
+  const rows = await supabaseRequest(`/rest/v1/appointments?id=eq.${encodeURIComponent(id)}&select=*`, accessToken, {
     method: 'PATCH',
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify(patch)
@@ -172,6 +184,7 @@ module.exports = async function handler(req, res) {
   try {
     const admin = await requireAdmin(req);
     if (!admin) return json(res, 401, { error: 'Connexion administrateur requise' });
+    const accessToken = admin.accessToken;
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const id = String(body.id || '');
@@ -181,7 +194,7 @@ module.exports = async function handler(req, res) {
       return json(res, 400, { error: 'Action inconnue' });
     }
 
-    let appointment = await getAppointment(id);
+    let appointment = await getAppointment(id, accessToken);
     if (!appointment) return json(res, 404, { error: 'Rendez-vous introuvable' });
 
     if (action === 'complete' || action === 'no_show') {
@@ -189,12 +202,12 @@ module.exports = async function handler(req, res) {
         return json(res, 409, { error: 'Seul un rendez-vous confirmé peut être clôturé' });
       }
       const nextStatus=action==='complete'?'completed':'no_show';
-      await patchAppointment(id, { status: nextStatus, expires_at: null });
+      await patchAppointment(id, { status: nextStatus, expires_at: null }, accessToken);
       return json(res, 200, { ok: true, status: nextStatus });
     }
 
     if (action === 'reject') {
-      await patchAppointment(id, { status: 'rejected', expires_at: null, confirmation_email_error: null });
+      await patchAppointment(id, { status: 'rejected', expires_at: null, confirmation_email_error: null }, accessToken);
       return json(res, 200, { ok: true, status: 'rejected' });
     }
 
@@ -202,7 +215,7 @@ module.exports = async function handler(req, res) {
       if (!['pending', 'confirmed'].includes(appointment.status)) {
         return json(res, 409, { error: 'Ce rendez-vous ne peut plus être annulé' });
       }
-      await patchAppointment(id, { status: 'cancelled', expires_at: null, cancellation_reason: 'Annulé depuis l’espace pro' });
+      await patchAppointment(id, { status: 'cancelled', expires_at: null, cancellation_reason: 'Annulé depuis l’espace pro' }, accessToken);
       return json(res, 200, { ok: true, status: 'cancelled' });
     }
 
@@ -211,13 +224,13 @@ module.exports = async function handler(req, res) {
         return json(res, 409, { error: 'Ce rendez-vous ne peut plus être confirmé' });
       }
       if (appointment.status === 'pending' && appointment.expires_at && new Date(appointment.expires_at).getTime() <= Date.now()) {
-        await patchAppointment(id, { status: 'cancelled', expires_at: null, cancellation_reason: 'Délai de confirmation dépassé' });
+        await patchAppointment(id, { status: 'cancelled', expires_at: null, cancellation_reason: 'Délai de confirmation dépassé' }, accessToken);
         return json(res, 409, { error: 'Cette demande a expiré et le créneau a été libéré.' });
       }
       if (appointment.status !== 'confirmed') {
-        await patchAppointment(id, { status: 'confirmed', confirmed_at: new Date().toISOString(), expires_at: null });
+        await patchAppointment(id, { status: 'confirmed', confirmed_at: new Date().toISOString(), expires_at: null }, accessToken);
       }
-      appointment = await getAppointment(id);
+      appointment = await getAppointment(id, accessToken);
     } else if (appointment.status !== 'confirmed') {
       return json(res, 409, { error: 'Le rendez-vous doit être confirmé avant de renvoyer le mail' });
     }
@@ -240,11 +253,11 @@ module.exports = async function handler(req, res) {
         confirmation_email_sent_at: sentAt,
         confirmation_email_id: sent.id || null,
         confirmation_email_error: null
-      });
+      }, accessToken);
       return json(res, 200, { ok: true, status: 'confirmed', emailSent: true, emailSkipped: false, emailId: sent.id || null });
     } catch (mailError) {
       const message = mailError instanceof Error ? mailError.message : 'Erreur inconnue';
-      await patchAppointment(id, { confirmation_email_error: message.slice(0, 500) });
+      await patchAppointment(id, { confirmation_email_error: message.slice(0, 500) }, accessToken);
       return json(res, 200, {
         ok: true,
         status: 'confirmed',
