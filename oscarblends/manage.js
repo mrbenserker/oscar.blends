@@ -111,9 +111,14 @@ async function loadMoveSlots(){
   if(!date||!db||!appointment?.services?.slug) return;
   $('#manageMoveSlots').innerHTML='<span class="small">Chargement des créneaux…</span>';
   try{
-    const {data,error}=await db.rpc('get_available_slots',{p_date:date,p_service_slug:appointment.services.slug});
+    const {data,error}=await db.rpc('get_client_move_slots',{p_token:token,p_date:date});
     if(error) throw error;
-    const slots=(data||[]).map(x=>({slot:String(x.slot||x).slice(0,5)})).filter(x=>x.slot).sort((a,b)=>a.slot.localeCompare(b.slot));
+    const currentDate=localDateKey(new Date(appointment.starts_at));
+    const currentTime=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(appointment.starts_at)).replace(' h ',':');
+    const slots=(data||[])
+      .map(x=>({slot:String(x.slot||x).slice(0,5)}))
+      .filter(x=>x.slot && !(date===currentDate&&x.slot===currentTime))
+      .sort((a,b)=>a.slot.localeCompare(b.slot));
     $('#manageMoveSlots').innerHTML=slots.length?`<div class="slot-grid">${slots.map(slotButton).join('')}</div>`:'<span class="small">Aucun autre créneau disponible ce jour.</span>';
   }catch(err){
     $('#manageMoveSlots').innerHTML='<span class="small">Impossible de charger les créneaux.</span>';
