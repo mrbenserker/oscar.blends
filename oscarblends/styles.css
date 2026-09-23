@@ -776,3 +776,57 @@ body{
   .slot-grid{grid-template-columns:1fr 1fr}
   .admin-metrics-v7{grid-template-columns:1fr}
 }
+
+
+/* V9.1 — garde-fous responsive */
+.agenda-contact,.agenda-contact a,
+.client-main span,.waitlist-admin-main,
+.manage-card,.dialog-card{
+  overflow-wrap:anywhere;
+}
+.admin-nav,.day-strip{
+  -webkit-overflow-scrolling:touch;
+}
+.btn,.admin-nav-btn,.slot,.day-chip{
+  touch-action:manipulation;
+}
+@media(max-width:700px){
+  input,select,textarea{font-size:16px!important}
+  .admin-dialog{
+    width:calc(100% - 10px);
+    padding:5px;
+  }
+  .dialog-card{
+    max-height:calc(100dvh - 10px);
+  }
+  .agenda-contact{
+    row-gap:4px;
+  }
+  .agenda-contact a{
+    max-width:100%;
+  }
+  .admin-nav{
+    overscroll-behavior-inline:contain;
+  }
+  .visual-timeline-wrap{
+    overflow-x:auto;
+  }
+  .visual-timeline{
+    min-width:360px;
+  }
+}
+@media(max-width:420px){
+  .mobile-recap span{
+    max-width:58vw;
+  }
+  .admin-brand-mark{
+    width:42px;
+    height:42px;
+  }
+  .admin-topbar h1{
+    font-size:1.8rem;
+  }
+  .admin-metrics article{
+    min-width:0;
+  }
+}
