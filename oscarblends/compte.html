@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="account-page">
   <header class="header">
     <div class="container header-inner">
       <a href="/" class="brand" aria-label="Oscar Blends">
@@ -43,37 +43,45 @@
       </section>
 
       <section id="accountView" class="hidden">
-        <div class="account-head account-card">
-          <div>
-            <p class="eyebrow">Mon espace Oscar Blends</p>
-            <h1>Mes rendez-vous.</h1>
-            <p id="accountUserEmail" class="account-email"></p>
-          </div>
-          <button type="button" class="btn btn-secondary btn-small" id="accountLogout">Se déconnecter</button>
+        <div class="account-stack">
+          <section class="account-hero account-card">
+            <div class="account-hero-top">
+              <div class="account-hero-copy">
+                <p class="eyebrow">Mon espace Oscar Blends</p>
+                <h1>Mes rendez-vous</h1>
+                <p class="account-intro">Retrouve tes prochains rendez-vous, ton historique et toutes les actions utiles au même endroit.</p>
+                <p id="accountUserEmail" class="account-email"></p>
+              </div>
+
+              <div class="account-hero-actions">
+                <a class="btn btn-primary btn-small" href="/">Nouveau rendez-vous</a>
+                <button type="button" class="btn btn-secondary btn-small" id="accountLogout">Se déconnecter</button>
+              </div>
+            </div>
+          </section>
+
+          <div id="accountClaimNotice" class="account-claim hidden"></div>
+
+          <section class="account-section-card">
+            <div class="account-section-head">
+              <div>
+                <p class="panel-kicker">À venir</p>
+                <h2>Prochains rendez-vous</h2>
+              </div>
+            </div>
+            <div id="accountUpcoming" class="account-list"></div>
+          </section>
+
+          <section class="account-section-card">
+            <div class="account-section-head">
+              <div>
+                <p class="panel-kicker">Historique</p>
+                <h2>Mes anciens rendez-vous</h2>
+              </div>
+            </div>
+            <div id="accountHistory" class="account-list"></div>
+          </section>
         </div>
-
-        <div id="accountClaimNotice" class="account-claim hidden"></div>
-
-        <section class="account-section">
-          <div class="section-head account-section-head">
-            <div>
-              <p class="panel-kicker">À venir</p>
-              <h2>Prochains rendez-vous</h2>
-            </div>
-            <a class="btn btn-primary btn-small" href="/">Nouveau rendez-vous</a>
-          </div>
-          <div id="accountUpcoming" class="account-list"></div>
-        </section>
-
-        <section class="account-section">
-          <div class="section-head account-section-head">
-            <div>
-              <p class="panel-kicker">Historique</p>
-              <h2>Mes anciens rendez-vous</h2>
-            </div>
-          </div>
-          <div id="accountHistory" class="account-list"></div>
-        </section>
       </section>
     </div>
   </main>
