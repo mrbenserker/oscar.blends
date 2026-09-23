@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#fafae7">
+  <title>Oscar Blends — Gérer mon rendez-vous</title>
+  <meta name="description" content="Consulte, déplace ou annule ton rendez-vous Oscar Blends.">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="/" class="brand" aria-label="Oscar Blends">
+        <img src="assets/logo-oscar-blends.png" alt="Oscar Blends" class="brand-logo">
+      </a>
+      <a href="/" class="header-link">Réserver</a>
+    </div>
+  </header>
+
+  <main class="manage-main">
+    <div class="container manage-container">
+      <section class="manage-card" id="manageLoading">
+        <p class="eyebrow">Mon rendez-vous</p>
+        <h1>Chargement…</h1>
+        <p>Nous récupérons les informations de ton rendez-vous.</p>
+      </section>
+
+      <section class="manage-card hidden" id="manageError">
+        <p class="eyebrow">Lien invalide</p>
+        <h1>Impossible d’ouvrir ce rendez-vous.</h1>
+        <p id="manageErrorText">Le lien est invalide ou le rendez-vous n’existe plus.</p>
+        <a class="btn btn-primary" href="/">Faire une réservation</a>
+      </section>
+
+      <section class="manage-card hidden" id="manageView">
+        <div class="manage-head">
+          <div>
+            <p class="eyebrow">Mon rendez-vous</p>
+            <h1 id="manageTitle">Ton rendez-vous Oscar Blends</h1>
+          </div>
+          <span id="manageStatus" class="badge confirmed">Confirmé</span>
+        </div>
+
+        <div class="manage-recap">
+          <div><span>Date</span><strong id="manageDate">—</strong></div>
+          <div><span>Prestation</span><strong id="manageService">—</strong></div>
+          <div><span>Durée</span><strong id="manageDuration">—</strong></div>
+          <div><span>Tarif</span><strong id="managePrice">—</strong></div>
+        </div>
+
+        <div id="managePendingNote" class="success-note hidden">
+          Ta demande est encore en attente de confirmation. Le créneau reste bloqué provisoirement.
+        </div>
+
+        <div class="manage-actions" id="manageActions">
+          <button type="button" class="btn btn-primary" id="showMoveBtn">Déplacer le rendez-vous</button>
+          <button type="button" class="btn btn-secondary danger-outline" id="cancelClientBtn">Annuler le rendez-vous</button>
+        </div>
+
+        <section class="manage-move hidden" id="moveClientPanel">
+          <div class="panel-head compact">
+            <div>
+              <p class="panel-kicker">Nouveau créneau</p>
+              <h2>Choisis une autre date.</h2>
+            </div>
+          </div>
+          <div class="field">
+            <label for="manageMoveDate">Date</label>
+            <input type="date" id="manageMoveDate">
+          </div>
+          <div class="field-group">
+            <div class="field-title">Horaires disponibles</div>
+            <div id="manageMoveSlots" class="slots"><span class="small">Choisis une date.</span></div>
+          </div>
+          <button type="button" class="text-button" id="closeMoveBtn">Annuler le changement</button>
+        </section>
+
+        <div id="calendarAction" class="manage-secondary hidden">
+          <button type="button" class="btn btn-secondary" id="calendarBtn">Ajouter au calendrier</button>
+        </div>
+
+        <div class="manage-secondary">
+          <a id="rebookBtn" class="btn btn-secondary" href="/">Reprendre la même prestation</a>
+        </div>
+
+        <div class="status-box" id="manageStatusBox" role="status" aria-live="polite"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="manage.js"></script>
+</body>
+</html>
