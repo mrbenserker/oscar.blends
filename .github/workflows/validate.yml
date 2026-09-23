@@ -20,6 +20,7 @@ jobs:
           node --check admin.js
           node --check admin-v8.js
           node --check manage.js
+          node --check compte.js
           node --check api/public-config.js
           node --check api/_mailer.js
           node --check api/email-test.js
