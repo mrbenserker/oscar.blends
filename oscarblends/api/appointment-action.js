@@ -72,7 +72,7 @@ async function requireAdmin(req) {
 
 async function getAppointment(id) {
   const rows = await supabaseRequest(
-    `/rest/v1/appointments?id=eq.${encodeURIComponent(id)}&select=id,status,customer_name,email,phone,starts_at,ends_at,expires_at,confirmation_email_sent_at,confirmation_email_id,confirmation_email_error,services(name,price_cents,duration_minutes)&limit=1`
+    `/rest/v1/appointments?id=eq.${encodeURIComponent(id)}&select=id,status,customer_name,email,phone,starts_at,ends_at,expires_at,confirmation_email_sent_at,confirmation_email_id,confirmation_email_error,management_token,services(slug,name,price_cents,duration_minutes)&limit=1`
   );
   return Array.isArray(rows) ? rows[0] : null;
 }
@@ -97,6 +97,9 @@ function buildConfirmationEmail(appointment) {
   const safeDuration = escapeHtml(durationLabel);
   const safePrice = escapeHtml(price);
 
+  const siteBase=(process.env.SITE_URL||process.env.VERCEL_PROJECT_PRODUCTION_URL||'').replace(/\/$/,'');
+  const manageUrl=siteBase&&appointment.management_token?`${siteBase.startsWith('http')?siteBase:'https://'+siteBase}/manage.html?t=${appointment.management_token}`:'';
+
   const html = `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;background:#f4f1e8;font-family:Arial,Helvetica,sans-serif;color:#1f2b27">
@@ -116,12 +119,13 @@ function buildConfirmationEmail(appointment) {
           <tr><td style="padding:6px 0;color:#6b756f">Tarif</td><td style="padding:6px 0;text-align:right">${safePrice}</td></tr>
         </table>
       </div>
+      ${manageUrl?`<p style="margin:0 0 20px"><a href="${escapeHtml(manageUrl)}" style="display:inline-block;background:#3b7061;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-weight:700">Gérer mon rendez-vous</a></p>`:''}
       <p style="font-size:14px;line-height:1.6;color:#58635e;margin:0">À bientôt,<br><strong>Oscar Blends</strong></p>
     </div>
   </div>
 </body></html>`;
 
-  const text = `Bonjour ${appointment.customer_name || ''},\n\nTon rendez-vous Oscar Blends est confirmé.\n\n${dateLabel} à ${timeLabel}\nPrestation : ${service.name || 'Prestation'}\nDurée : ${durationLabel}\nTarif : ${price}\n\nÀ bientôt,\nOscar Blends`;
+  const text = `Bonjour ${appointment.customer_name || ''},\n\nTon rendez-vous Oscar Blends est confirmé.\n\n${dateLabel} à ${timeLabel}\nPrestation : ${service.name || 'Prestation'}\nDurée : ${durationLabel}\nTarif : ${price}${manageUrl?`\n\nGérer le rendez-vous : ${manageUrl}`:''}\n\nÀ bientôt,\nOscar Blends`;
 
   return {
     subject: `Rendez-vous Oscar Blends confirmé — ${dateLabel} à ${timeLabel}`,
@@ -173,12 +177,21 @@ module.exports = async function handler(req, res) {
     const id = String(body.id || '');
     const action = String(body.action || '');
     if (!id) return json(res, 400, { error: 'Rendez-vous manquant' });
-    if (!['confirm', 'reject', 'cancel', 'resend_confirmation'].includes(action)) {
+    if (!['confirm', 'reject', 'cancel', 'resend_confirmation', 'complete', 'no_show'].includes(action)) {
       return json(res, 400, { error: 'Action inconnue' });
     }
 
     let appointment = await getAppointment(id);
     if (!appointment) return json(res, 404, { error: 'Rendez-vous introuvable' });
+
+    if (action === 'complete' || action === 'no_show') {
+      if (appointment.status !== 'confirmed') {
+        return json(res, 409, { error: 'Seul un rendez-vous confirmé peut être clôturé' });
+      }
+      const nextStatus=action==='complete'?'completed':'no_show';
+      await patchAppointment(id, { status: nextStatus, expires_at: null });
+      return json(res, 200, { ok: true, status: nextStatus });
+    }
 
     if (action === 'reject') {
       await patchAppointment(id, { status: 'rejected', expires_at: null, confirmation_email_error: null });
