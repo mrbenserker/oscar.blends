@@ -147,26 +147,13 @@ function demoSlots(date){
       if(candidateStart<open || candidateStart>maxStart || candidateEnd>close || !isFutureDemoSlot(date,candidateStart)) return;
       if(busy.some(b=>overlapsMinutes(candidateStart,candidateEnd,b))) return;
 
-      const previousEnds=busy.filter(b=>b.end<=candidateStart).map(b=>b.end);
-      const nextStarts=busy.filter(b=>b.start>=candidateEnd).map(b=>b.start);
-      const leftBoundary=previousEnds.length?Math.max(open,...previousEnds):open;
-      const rightBoundary=nextStarts.length?Math.min(close,...nextStarts):close;
-      const gapBefore=candidateStart-leftBoundary;
-      const gapAfter=rightBoundary-candidateEnd;
-      const packedLeft=gapBefore===0;
-      const packedRight=gapAfter===0;
-      const recommended=packedLeft||packedRight;
-      const score=(packedLeft?150:0)+(packedRight?150:0)-(gapBefore+gapAfter)/20;
-      all.push({slot:minutesToTime(candidateStart),recommended,score});
+      all.push({slot:minutesToTime(candidateStart)});
     });
   });
 
   const unique=new Map();
-  all.forEach(x=>{
-    const old=unique.get(x.slot);
-    if(!old || x.score>old.score) unique.set(x.slot,x);
-  });
-  return [...unique.values()].sort((a,b)=>Number(b.recommended)-Number(a.recommended)||b.score-a.score||a.slot.localeCompare(b.slot));
+  all.forEach(x=>unique.set(x.slot,x));
+  return [...unique.values()].sort((a,b)=>a.slot.localeCompare(b.slot));
 }
 
 function renderServices(){
@@ -230,9 +217,9 @@ async function loadSlots(date){
       const {data,error}=await db.rpc('get_available_slots',{p_date:date,p_service_slug:selectedService.id});
       if(error) throw error;
       slots=(data||[]).map(x=>{
-        if(typeof x==='string') return {slot:x.slice(0,5),recommended:false};
-        return {slot:x.slot?.slice(0,5),recommended:Boolean(x.recommended)};
-      }).filter(x=>x.slot);
+        if(typeof x==='string') return {slot:x.slice(0,5)};
+        return {slot:x.slot?.slice(0,5)};
+      }).filter(x=>x.slot).sort((a,b)=>a.slot.localeCompare(b.slot));
     }
     renderSlots(slots);
   }catch(err){
@@ -247,22 +234,12 @@ function renderSlots(slots){
     return;
   }
 
-  const normalized=slots.map(x=>typeof x==='string'?{slot:x,recommended:false}:x);
-  const recommended=normalized.filter(x=>x.recommended).slice(0,6);
-  const recommendedTimes=new Set(recommended.map(x=>x.slot));
-  const others=normalized.filter(x=>!recommendedTimes.has(x.slot)).sort((a,b)=>a.slot.localeCompare(b.slot));
-  const button=(x,recommendedLabel=false)=>`<button type="button" class="slot ${recommendedLabel?'recommended':''}" data-time="${x.slot}"><span>${x.slot}</span>${recommendedLabel?'<small>Conseillé</small>':''}</button>`;
+  const normalized=slots
+    .map(x=>typeof x==='string'?{slot:x}:x)
+    .filter(x=>x?.slot)
+    .sort((a,b)=>a.slot.localeCompare(b.slot));
 
-  let html='';
-  if(recommended.length){
-    html+=`<div class="slot-section"><div class="slot-section-title"><strong>Créneaux conseillés</strong><span>Ils remplissent le mieux la journée.</span></div><div class="slot-grid">${recommended.map(x=>button(x,true)).join('')}</div></div>`;
-    if(others.length){
-      html+=`<details class="all-slots"><summary>Voir aussi les ${others.length} autres horaires disponibles</summary><div class="slot-grid">${others.map(x=>button(x,false)).join('')}</div></details>`;
-    }
-  }else{
-    html=`<div class="slot-section"><div class="slot-section-title"><strong>Horaires disponibles</strong><span>Choisis celui qui te convient.</span></div><div class="slot-grid">${others.map(x=>button(x,false)).join('')}</div></div>`;
-  }
-  $('#slots').innerHTML=html;
+  $('#slots').innerHTML=`<div class="slot-section"><div class="slot-section-title"><strong>Horaires disponibles</strong><span>Choisis celui qui te convient.</span></div><div class="slot-grid">${normalized.map(x=>`<button type="button" class="slot" data-time="${x.slot}"><span>${x.slot}</span></button>`).join('')}</div></div>`;
 
   $$('.slot').forEach(btn=>btn.addEventListener('click',()=>{
     selectedSlot=btn.dataset.time;
