@@ -15,6 +15,7 @@ let selectedService = null;
 let selectedDate = null;
 let selectedSlot = null;
 let currentStep = 1;
+let lastManagementToken = null;
 
 const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
@@ -330,8 +331,11 @@ async function submitBooking(e){
       if(conflict) throw new Error('Ce créneau vient d’être pris. Choisis-en un autre.');
       const start=dateTimeFor(selectedDate,selectedSlot);
       const end=new Date(start.getTime()+selectedService.duration*60000);
+      const demoManagementToken=crypto.randomUUID();
+      lastManagementToken=demoManagementToken;
       list.unshift({
         id:crypto.randomUUID(),
+        management_token:demoManagementToken,
         service:selectedService.id,
         service_slug:selectedService.id,
         service_name:selectedService.name,
@@ -351,12 +355,18 @@ async function submitBooking(e){
       });
       localStorage.setItem('oscar_demo_appointments',JSON.stringify(list));
     }else{
-      const {error}=await db.rpc('request_appointment',{p_service_slug:selectedService.id,p_date:selectedDate,p_time:selectedSlot,p_customer_name:name,p_phone:phone,p_email:email,p_notes:notes||null});
+      const {data,error}=await db.rpc('request_appointment',{p_service_slug:selectedService.id,p_date:selectedDate,p_time:selectedSlot,p_customer_name:name,p_phone:phone,p_email:email,p_notes:notes||null});
       if(error) throw error;
+      lastManagementToken=data||null;
     }
     const recap=`${formatLongDate(selectedDate,`${selectedSlot} – ${addMinutes(selectedSlot,selectedService.duration)}`)} · ${selectedService.name} · ${selectedService.price} €.`;
     $('#successRecap').textContent=`${recap} Ta demande reste en attente jusqu’à la confirmation d’Oscar Blends.`;
-    $$('[data-step-panel]').forEach(p=>p.classList.add('hidden'));
+    const manageLink=$('#successManageLink');
+    if(manageLink&&lastManagementToken){
+      manageLink.href=`/manage.html?t=${encodeURIComponent(lastManagementToken)}`;
+      manageLink.classList.remove('hidden');
+    }
+    $('[data-step-panel]').forEach(p=>p.classList.add('hidden'));
     $('#successPanel').classList.remove('hidden');
     $('#mobileSubmitWrap').classList.add('hidden');
     document.body.classList.remove('has-mobile-submit');
@@ -380,7 +390,8 @@ function showStatus(message,ok){
 }
 
 function resetBooking(){
-  selectedService=null; selectedDate=null; selectedSlot=null;
+  selectedService=null; selectedDate=null; selectedSlot=null; lastManagementToken=null;
+  $('#successManageLink')?.classList.add('hidden');
   $('#bookingForm').reset();
   $('#bookingStatus').classList.remove('show');
   $('#successPanel').classList.add('hidden');
