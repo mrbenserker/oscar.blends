@@ -101,27 +101,62 @@ function emailTemplate({email,actionLink,base}){
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>Connexion Oscar Blends</title>
+  <style>
+    :root{color-scheme:light only;supported-color-schemes:light}
+    body,table,td,p,a,span,div,h1,strong{color-scheme:light only!important}
+    .ob-page{background-color:#efe3d2!important;background-image:linear-gradient(#efe3d2,#efe3d2)!important}
+    .ob-card{background-color:#fbf5ec!important;background-image:linear-gradient(#fbf5ec,#fbf5ec)!important}
+    .ob-note{background-color:#efe3d2!important;background-image:linear-gradient(#efe3d2,#efe3d2)!important}
+    .ob-button{background-color:#3b7061!important;background-image:linear-gradient(#3b7061,#3b7061)!important}
+    [data-ogsc] .ob-page{background:#efe3d2!important}
+    [data-ogsc] .ob-card{background:#fbf5ec!important}
+    [data-ogsc] .ob-note{background:#efe3d2!important}
+    [data-ogsc] .ob-button{background:#3b7061!important}
+    [data-ogsc] .ob-text{color:#1d2925!important}
+    [data-ogsc] .ob-green{color:#2b574d!important}
+    [data-ogsc] .ob-muted{color:#665f56!important}
+  </style>
 </head>
-<body style="margin:0;background:#efe3d2;font-family:Arial,Helvetica,sans-serif;color:#1d2925">
-  <div style="max-width:620px;margin:0 auto;padding:30px 16px">
-    <div style="background:#fbf5ec;border:1px solid rgba(73,56,42,.13);border-bottom:0;border-radius:22px 22px 0 0;padding:26px;text-align:center;color:#2b574d">
-      ${safeLogo?`<img src="${safeLogo}" alt="Oscar Blends" width="145" style="display:block;width:145px;max-width:65%;height:auto;margin:0 auto 18px">`:''}
-      <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#3b7061;font-weight:700">Espace client Oscar Blends</div>
-      <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.08;font-weight:500;margin:10px 0 0;color:#2b574d">Ton lien de connexion</h1>
-    </div>
-    <div style="background:#fbf5ec;border:1px solid rgba(73,56,42,.13);border-top:0;border-radius:0 0 22px 22px;padding:28px">
-      <p style="font-size:16px;line-height:1.65;margin:0 0 16px">Bonjour,</p>
-      <p style="font-size:16px;line-height:1.65;margin:0 0 22px">Tu as demandé à accéder à ton espace client <strong>Oscar Blends</strong> avec l’adresse <strong>${safeEmail}</strong>.</p>
-      <p style="margin:0 0 24px;text-align:center">
-        <a href="${safeLink}" style="display:inline-block;background:#3b7061;color:#fff;text-decoration:none;padding:14px 24px;border-radius:999px;font-size:15px;font-weight:700">Accéder à mon espace</a>
-      </p>
-      <div style="background:#efe3d2;border-radius:14px;padding:14px 16px;font-size:13px;line-height:1.55;color:#665f56">
-        Ce lien est personnel et sécurisé. Si tu n’es pas à l’origine de cette demande, ignore simplement cet e-mail.
-      </div>
-      <p style="font-size:13px;line-height:1.6;color:#746d63;margin:22px 0 0">À bientôt,<br><strong style="color:#2b574d">Oscar Blends</strong></p>
-    </div>
-  </div>
+<body class="ob-page" bgcolor="#efe3d2" style="margin:0;padding:0;background-color:#efe3d2!important;background-image:linear-gradient(#efe3d2,#efe3d2)!important;font-family:Arial,Helvetica,sans-serif;color:#1d2925!important">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#efe3d2" class="ob-page" style="width:100%;background-color:#efe3d2!important;background-image:linear-gradient(#efe3d2,#efe3d2)!important">
+    <tr>
+      <td align="center" bgcolor="#efe3d2" class="ob-page" style="padding:30px 16px;background-color:#efe3d2!important;background-image:linear-gradient(#efe3d2,#efe3d2)!important">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px">
+          <tr>
+            <td align="center" bgcolor="#fbf5ec" class="ob-card" style="padding:28px 26px 20px;border:1px solid #e3d7c7;border-bottom:0;border-radius:22px 22px 0 0;background-color:#fbf5ec!important;background-image:linear-gradient(#fbf5ec,#fbf5ec)!important">
+              ${safeLogo?`<img src="${safeLogo}" alt="Oscar Blends" width="145" style="display:block;width:145px;max-width:65%;height:auto;margin:0 auto 18px;border:0">`:''}
+              <div class="ob-green" style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#3b7061!important;font-weight:700">Espace client Oscar Blends</div>
+              <h1 class="ob-green" style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.08;font-weight:500;margin:10px 0 0;color:#2b574d!important">Ton lien de connexion</h1>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#fbf5ec" class="ob-card ob-text" style="padding:28px;border:1px solid #e3d7c7;border-top:0;border-radius:0 0 22px 22px;background-color:#fbf5ec!important;background-image:linear-gradient(#fbf5ec,#fbf5ec)!important;color:#1d2925!important">
+              <p class="ob-text" style="font-size:16px;line-height:1.65;margin:0 0 16px;color:#1d2925!important">Bonjour,</p>
+              <p class="ob-text" style="font-size:16px;line-height:1.65;margin:0 0 22px;color:#1d2925!important">Tu as demandé à accéder à ton espace client <strong style="color:#1d2925!important">Oscar Blends</strong> avec l’adresse <strong style="color:#1d2925!important">${safeEmail}</strong>.</p>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto 24px">
+                <tr>
+                  <td align="center" bgcolor="#3b7061" class="ob-button" style="border-radius:999px;background-color:#3b7061!important;background-image:linear-gradient(#3b7061,#3b7061)!important">
+                    <a href="${safeLink}" style="display:inline-block;color:#ffffff!important;text-decoration:none;padding:14px 24px;font-size:15px;font-weight:700;border-radius:999px">Accéder à mon espace</a>
+                  </td>
+                </tr>
+              </table>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td bgcolor="#efe3d2" class="ob-note ob-muted" style="background-color:#efe3d2!important;background-image:linear-gradient(#efe3d2,#efe3d2)!important;border-radius:14px;padding:14px 16px;font-size:13px;line-height:1.55;color:#665f56!important">
+                    Ce lien est personnel et sécurisé. Si tu n’es pas à l’origine de cette demande, ignore simplement cet e-mail.
+                  </td>
+                </tr>
+              </table>
+              <p class="ob-muted" style="font-size:13px;line-height:1.6;color:#746d63!important;margin:22px 0 0">À bientôt,<br><strong class="ob-green" style="color:#2b574d!important">Oscar Blends</strong></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 
