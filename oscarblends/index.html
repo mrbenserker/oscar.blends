@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#fafae7">
+  <title>Oscar Blends — Réserver un rendez-vous</title>
+  <meta name="description" content="Réserve ton rendez-vous Oscar Blends en quelques étapes : prestation, créneau puis confirmation par Oscar.">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="#reservation" class="brand" aria-label="Oscar Blends - réservation">
+        <img src="assets/logo-oscar-blends.png" alt="Oscar Blends" class="brand-logo">
+      </a>
+      <a href="#realisations" class="header-link">Réalisations</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="booking-hero" id="reservation">
+      <div class="container booking-container">
+        <div class="intro">
+          <p class="eyebrow">Oscar Blends · Sur rendez-vous</p>
+          <h1>Réserve ton prochain rendez-vous.</h1>
+          <p class="intro-copy">Choisis ta prestation puis ton créneau. Les horaires conseillés permettent d’optimiser le planning, mais les autres disponibilités restent accessibles.</p>
+        </div>
+
+        <ol class="progress" aria-label="Étapes de réservation">
+          <li class="progress-step active" data-progress="1"><span>1</span><strong>Prestation</strong></li>
+          <li class="progress-line"></li>
+          <li class="progress-step" data-progress="2"><span>2</span><strong>Créneau</strong></li>
+          <li class="progress-line"></li>
+          <li class="progress-step" data-progress="3"><span>3</span><strong>Confirmation</strong></li>
+        </ol>
+
+        <div id="demoNotice" class="preview-notice hidden" role="note">
+          <strong>Version aperçu :</strong> les demandes enregistrées ici restent sur cet appareil tant que la base en ligne n’est pas connectée.
+        </div>
+
+        <section class="booking-panel" id="step1" data-step-panel="1">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">Étape 1 sur 3</p>
+              <h2>Que souhaites-tu réserver ?</h2>
+            </div>
+          </div>
+          <div class="service-list" id="servicesGrid"></div>
+        </section>
+
+        <section class="booking-panel hidden" id="step2" data-step-panel="2">
+          <div class="selection-bar">
+            <div>
+              <span class="selection-label">Ta prestation</span>
+              <strong id="selectedServiceLabel">—</strong>
+              <small id="selectedServiceMeta"></small>
+            </div>
+            <button type="button" class="text-button" id="changeService">Modifier</button>
+          </div>
+
+          <div class="panel-head compact">
+            <div>
+              <p class="panel-kicker">Étape 2 sur 3</p>
+              <h2>Choisis ton créneau.</h2>
+              <p>Les créneaux recommandés sont ceux qui s’intègrent le mieux entre les rendez-vous déjà demandés ou confirmés.</p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field-title">Jour</div>
+            <div class="day-strip" id="dayStrip" aria-label="Jours disponibles"></div>
+            <details class="more-date">
+              <summary>Choisir une autre date</summary>
+              <div class="date-wrap"><input type="date" id="dateInput" aria-label="Autre date"></div>
+            </details>
+          </div>
+
+          <div class="field-group">
+            <div class="field-title">Horaires disponibles <span class="planning-hint">· calculés selon la durée de ta prestation</span></div>
+            <div class="slots" id="slots" aria-live="polite"><span class="small">Choisis d’abord un jour.</span></div>
+          </div>
+        </section>
+
+        <section class="booking-panel hidden" id="step3" data-step-panel="3">
+          <div class="panel-head compact">
+            <div>
+              <p class="panel-kicker">Étape 3 sur 3</p>
+              <h2>Confirme ta demande.</h2>
+              <p>Vérifie ton rendez-vous puis renseigne tes coordonnées.</p>
+            </div>
+          </div>
+
+          <div class="final-summary" id="finalSummary">
+            <div class="summary-icon">✓</div>
+            <div class="summary-main">
+              <strong id="finalDate">—</strong>
+              <span id="finalService">—</span>
+            </div>
+            <div class="summary-price" id="finalPrice">—</div>
+          </div>
+
+          <form id="bookingForm" class="booking-form">
+            <div class="name-grid">
+              <div class="field">
+                <label for="firstNameInput">Prénom</label>
+                <input id="firstNameInput" autocomplete="given-name" required placeholder="Ex. Lucas">
+              </div>
+              <div class="field">
+                <label for="lastNameInput">Nom</label>
+                <input id="lastNameInput" autocomplete="family-name" required placeholder="Ex. Martin">
+              </div>
+            </div>
+            <div class="field">
+              <label for="phoneInput">Téléphone</label>
+              <input id="phoneInput" type="tel" inputmode="tel" autocomplete="tel" required placeholder="06 00 00 00 00">
+            </div>
+            <div class="field">
+              <label for="emailInput">E-mail</label>
+              <input id="emailInput" type="email" inputmode="email" autocomplete="email" required placeholder="ton@email.fr">
+              <small class="field-help">Utilisé uniquement pour gérer et confirmer ton rendez-vous.</small>
+            </div>
+
+            <details class="optional-details">
+              <summary>Ajouter une précision <span>facultatif</span></summary>
+              <div class="optional-fields">
+                <div class="field">
+                  <label for="notesInput">Précision</label>
+                  <textarea id="notesInput" rows="3" placeholder="Type de coupe, demande particulière…"></textarea>
+                </div>
+              </div>
+            </details>
+
+            <div class="pending-note">
+              <span>!</span>
+              <p><strong>Le rendez-vous n’est pas encore confirmé.</strong> Dès l’envoi, ce créneau est bloqué provisoirement pour les autres clients pendant que ta demande est étudiée.</p>
+            </div>
+
+            <div class="privacy-note">En envoyant cette demande, tu acceptes que Oscar Blends utilise ton nom, ton téléphone et ton e-mail uniquement pour gérer ce rendez-vous.</div>
+
+            <button class="btn btn-primary submit-inline" id="submitBooking" type="submit">Demander ce rendez-vous</button>
+            <button class="text-button back-button" id="backToSlots" type="button">← Choisir un autre créneau</button>
+            <div class="status-box" id="bookingStatus" role="status" aria-live="polite"></div>
+          </form>
+        </section>
+
+        <section class="success-panel hidden" id="successPanel" aria-live="polite">
+          <div class="success-check">✓</div>
+          <p class="panel-kicker">Demande envoyée</p>
+          <h2>Ton créneau est réservé provisoirement.</h2>
+          <p id="successRecap">Ta demande reste en attente jusqu’à la confirmation d’Oscar Blends.</p>
+          <div class="success-note">Pendant que la demande est en attente, le créneau n’est plus proposé aux autres clients. S’il est refusé ou expire, il redevient disponible.</div>
+          <button type="button" class="btn btn-secondary" id="newBooking">Faire une autre demande</button>
+        </section>
+      </div>
+    </section>
+
+    <section class="reassurance">
+      <div class="container reassurance-grid">
+        <div><span>01</span><strong>Tu choisis</strong><p>Prestation, jour et heure.</p></div>
+        <div><span>02</span><strong>Le créneau se bloque</strong><p>Dès l’envoi de ta demande.</p></div>
+        <div><span>03</span><strong>Je confirme</strong><p>Ton rendez-vous devient définitif.</p></div>
+      </div>
+    </section>
+
+    <section class="realisations" id="realisations">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow light">Quelques réalisations</p>
+            <h2>Le résultat avant le rendez-vous.</h2>
+          </div>
+          <a class="instagram-link social-link" target="_blank" rel="noreferrer">Voir Instagram ↗</a>
+        </div>
+        <div class="gallery-grid">
+          <div class="photo-slot"><img src="photos/photo-1.jpg" alt="Réalisation Oscar Blends"><div class="photo-placeholder"><strong>Réalisation 01</strong><span>Ajoute une photo Instagram</span></div></div>
+          <div class="photo-slot"><img src="photos/photo-2.jpg" alt="Réalisation Oscar Blends"><div class="photo-placeholder"><strong>Réalisation 02</strong><span>Ajoute une photo Instagram</span></div></div>
+          <div class="photo-slot"><img src="photos/photo-3.jpg" alt="Réalisation Oscar Blends"><div class="photo-placeholder"><strong>Réalisation 03</strong><span>Ajoute une photo Instagram</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="privacy-section" id="confidentialite">
+      <div class="container privacy-inner">
+        <strong>Confidentialité</strong>
+        <p>Les coordonnées saisies lors d’une demande sont utilisées uniquement pour organiser, confirmer ou modifier le rendez-vous. Elles ne sont pas utilisées à des fins publicitaires.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <img src="assets/logo-oscar-blends.png" alt="Oscar Blends" class="footer-logo">
+      <div class="footer-links"><a class="instagram-link" target="_blank" rel="noreferrer">Instagram</a><a href="#confidentialite">Confidentialité</a></div>
+    </div>
+  </footer>
+
+  <div class="mobile-submit hidden" id="mobileSubmitWrap">
+    <div class="mobile-submit-inner">
+      <div class="mobile-recap"><strong id="mobileRecapTitle">Ton rendez-vous</strong><span id="mobileRecapMeta">—</span></div>
+      <button class="btn btn-primary" id="mobileSubmit" type="button">Demander</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

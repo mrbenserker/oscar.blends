@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#3b7061">
+  <title>Oscar Blends — Planning</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="admin-page">
+  <div class="admin-shell">
+    <section id="loginView" class="login-box admin-card">
+      <img src="assets/logo-oscar-blends.png" alt="Oscar Blends" class="admin-login-logo">
+      <p class="eyebrow">Espace privé</p>
+      <h1>Ton planning Oscar Blends</h1>
+      <p>Connecte-toi pour gérer les demandes, l’agenda et tes indisponibilités.</p>
+      <div id="demoAdmin" class="preview-notice hidden"><strong>Mode démo :</strong> clique sur « Entrer » sans identifiants.</div>
+      <form id="loginForm" class="booking-form">
+        <div class="field"><label for="adminEmail">E-mail</label><input id="adminEmail" type="email" autocomplete="username" placeholder="ton@email.fr"></div>
+        <div class="field"><label for="adminPassword">Mot de passe</label><input id="adminPassword" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+        <button class="btn btn-primary" type="submit">Entrer</button>
+        <div id="loginError" class="small"></div>
+      </form>
+    </section>
+
+    <section id="adminView" class="hidden">
+      <header class="admin-topbar">
+        <div class="admin-brand-block">
+          <img src="assets/logo-mark.png" alt="" class="admin-brand-mark" aria-hidden="true">
+          <div>
+            <p class="eyebrow">Oscar Blends</p>
+            <h1>Planning</h1>
+            <div class="small" id="adminSubtitle">Gestion des rendez-vous</div>
+          </div>
+        </div>
+        <div class="admin-top-actions">
+          <a href="index.html" class="btn btn-secondary btn-small">Voir le site</a>
+          <button id="logoutBtn" class="btn btn-secondary btn-small" type="button">Déconnexion</button>
+        </div>
+      </header>
+
+      <div id="adminFlash" class="status-box" role="status" aria-live="polite"></div>
+
+      <section class="admin-metrics" aria-label="Résumé du planning">
+        <article><span>Aujourd’hui</span><strong id="metricToday">0</strong><small>rendez-vous actifs</small></article>
+        <article><span>En attente</span><strong id="metricPending">0</strong><small>demandes à traiter</small></article>
+        <article><span>Cette semaine</span><strong id="metricWeek">0</strong><small>rendez-vous actifs</small></article>
+      </section>
+
+      <nav class="admin-nav" aria-label="Navigation de l’espace pro">
+        <button type="button" class="admin-nav-btn active" data-admin-view="agenda">Agenda</button>
+        <button type="button" class="admin-nav-btn" data-admin-view="requests">Demandes <span id="pendingPill" class="nav-pill">0</span></button>
+        <button type="button" class="admin-nav-btn" data-admin-view="closures">Indisponibilités</button>
+        <button type="button" class="admin-nav-btn" data-admin-view="settings">Réglages</button>
+      </nav>
+
+      <main class="admin-main">
+        <section class="admin-view" data-view-panel="agenda">
+          <div class="admin-section-head">
+            <div><p class="panel-kicker">Agenda</p><h2>Ta journée en un coup d’œil.</h2></div>
+            <div class="segmented" id="agendaRange">
+              <button type="button" class="active" data-range="today">Aujourd’hui</button>
+              <button type="button" data-range="tomorrow">Demain</button>
+              <button type="button" data-range="week">7 jours</button>
+            </div>
+          </div>
+          <div id="agendaList" class="agenda-list"></div>
+        </section>
+
+        <section class="admin-view hidden" data-view-panel="requests">
+          <div class="admin-section-head">
+            <div><p class="panel-kicker">Demandes</p><h2>À confirmer ou refuser.</h2><p>Une demande en attente bloque déjà son créneau pour les autres clients.</p></div>
+          </div>
+          <div id="requestList" class="agenda-list"></div>
+        </section>
+
+        <section class="admin-view hidden" data-view-panel="closures">
+          <div class="admin-section-head">
+            <div><p class="panel-kicker">Indisponibilités</p><h2>Bloque un jour ou quelques heures.</h2><p>Le site client retire immédiatement ces horaires des disponibilités.</p></div>
+          </div>
+
+          <div class="admin-two-col">
+            <form id="closureForm" class="admin-card admin-form-card">
+              <h3>Ajouter une indisponibilité</h3>
+              <div class="field"><label for="closureDate">Date</label><input id="closureDate" type="date" required></div>
+              <label class="switch-row"><input type="checkbox" id="closureFullDay" checked><span><strong>Journée entière</strong><small>Bloque tous les créneaux de cette date.</small></span></label>
+              <div id="closureTimes" class="time-fields hidden">
+                <div class="field"><label for="closureStart">De</label><input id="closureStart" type="time" value="09:30"></div>
+                <div class="field"><label for="closureEnd">À</label><input id="closureEnd" type="time" value="10:30"></div>
+              </div>
+              <div class="field"><label for="closureReason">Motif <span class="muted-label">facultatif</span></label><input id="closureReason" maxlength="120" placeholder="Ex. rendez-vous personnel"></div>
+              <button class="btn btn-primary" type="submit">Bloquer ce créneau</button>
+            </form>
+
+            <div class="admin-card admin-form-card">
+              <h3>Prochaines indisponibilités</h3>
+              <div id="closureList" class="closure-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin-view hidden" data-view-panel="settings">
+          <div class="admin-section-head">
+            <div><p class="panel-kicker">Réglages</p><h2>Adapte le planning à ton rythme.</h2></div>
+          </div>
+
+          <div class="admin-card admin-settings-block">
+            <div class="settings-copy">
+              <h3>Délai d’une demande en attente</h3>
+              <p>Le créneau reste bloqué tant que tu n’as pas répondu. Au-delà de ce délai, une demande non confirmée expire automatiquement et libère le créneau.</p>
+            </div>
+            <div class="setting-control">
+              <label for="pendingHoldSelect">Expiration</label>
+              <select id="pendingHoldSelect">
+                <option value="120">Après 2 h</option>
+                <option value="240">Après 4 h</option>
+                <option value="480">Après 8 h</option>
+                <option value="720">Après 12 h</option>
+                <option value="1440">Après 24 h</option>
+                <option value="2880">Après 48 h</option>
+              </select>
+              <button type="button" class="btn btn-primary btn-small" id="savePendingHold">Enregistrer</button>
+            </div>
+          </div>
+
+          <div class="admin-card admin-settings-block schedule-settings">
+            <div class="settings-copy">
+              <h3>Horaires habituels</h3>
+              <p>Par défaut : 09h30–12h30, reprise à 14h00 et dernier départ à 19h00. Le dimanche est fermé par défaut, mais tu peux l’activer ici quand tu souhaites travailler.</p>
+            </div>
+            <div id="scheduleEditor" class="schedule-editor"></div>
+            <button type="button" class="btn btn-primary" id="saveSchedule">Enregistrer les horaires</button>
+          </div>
+
+          <div class="admin-card admin-settings-block">
+            <div class="settings-copy">
+              <h3>Confirmation par e-mail</h3>
+              <p id="emailConfigState">La configuration e-mail sera ajoutée plus tard. Les rendez-vous peuvent déjà être confirmés normalement.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

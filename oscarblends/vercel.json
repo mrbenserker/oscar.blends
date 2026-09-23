@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin/", "destination": "/admin.html" }
+  ],
+  "functions": {
+    "api/appointment-action.js": { "maxDuration": 10 },
+    "api/public-config.js": { "maxDuration": 10 }
+  }
+}

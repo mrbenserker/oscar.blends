@@ -1,0 +1,8 @@
+{
+  "name": "oscar-blends-booking",
+  "version": "6.0.0",
+  "private": true,
+  "dependencies": {
+    "nodemailer": "^7.0.6"
+  }
+}
