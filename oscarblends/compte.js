@@ -28,6 +28,29 @@ function setLoginStatus(message,ok=false){
   el.style.color=ok?'#173f37':'#8c392f';
 }
 
+let loginCooldownTimer=null;
+function startLoginCooldown(seconds=60){
+  const btn=$('#accountLoginBtn');
+  if(!btn) return;
+  if(loginCooldownTimer) clearInterval(loginCooldownTimer);
+
+  let remaining=Math.max(1,Number(seconds)||60);
+  btn.disabled=true;
+  btn.textContent=`Renvoyer dans ${remaining}s`;
+
+  loginCooldownTimer=setInterval(()=>{
+    remaining-=1;
+    if(remaining<=0){
+      clearInterval(loginCooldownTimer);
+      loginCooldownTimer=null;
+      btn.disabled=false;
+      btn.textContent='Recevoir mon lien de connexion';
+      return;
+    }
+    btn.textContent=`Renvoyer dans ${remaining}s`;
+  },1000);
+}
+
 function statusLabel(status){
   return ({
     pending:'En attente',
@@ -138,13 +161,20 @@ async function sendMagicLink(e){
       body:JSON.stringify({email})
     });
     const payload=await response.json().catch(()=>({}));
-    if(!response.ok) throw new Error(payload.error||'Impossible d’envoyer le lien de connexion.');
+    if(!response.ok){
+      if(response.status===429){
+        startLoginCooldown(Number(payload.retryAfter||response.headers.get('Retry-After')||60));
+      }
+      throw new Error(payload.error||'Impossible d’envoyer le lien de connexion.');
+    }
     setLoginStatus('E-mail Oscar Blends envoyé depuis rdv.oscarblends@gmail.com. Ouvre-le puis clique sur « Accéder à mon espace ».',true);
+    startLoginCooldown(60);
   }catch(error){
     setLoginStatus(error.message||'Impossible d’envoyer le lien de connexion.');
-  }finally{
-    btn.disabled=false;
-    btn.textContent='Recevoir mon lien de connexion';
+    if(!loginCooldownTimer){
+      btn.disabled=false;
+      btn.textContent='Recevoir mon lien de connexion';
+    }
   }
 }
 
