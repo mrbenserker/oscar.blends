@@ -94,7 +94,6 @@ img{max-width:100%;display:block}
 .slot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .slot{min-height:48px;border:1px solid var(--line);background:white;border-radius:14px;padding:8px 6px;font-weight:850;font-size:.9rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .slot small{font-size:.58rem;line-height:1.1;color:var(--green);font-weight:900;text-transform:uppercase;letter-spacing:.05em}
-.slot.recommended{border-color:rgba(46,107,94,.45);background:#f7fbf8}
 .slot:hover,.slot:focus-visible{border-color:rgba(46,107,94,.7);outline:none}
 .slot.active{background:var(--green);border-color:var(--green);color:white}
 .slot.active small{color:white}
@@ -547,9 +546,7 @@ body{
   background:var(--paper-light);
   border-color:var(--line);
 }
-.service-card:hover,.service-card:focus-visible,.slot.recommended{
-  background:#f4eadc;
-}
+.service-card:hover,.service-card:focus-visible,
 .optional-details,.switch-row,.buffer-row,.client-history-row{
   background:rgba(251,245,236,.52);
 }
