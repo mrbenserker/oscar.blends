@@ -1,20 +1,6 @@
-let cfg=window.OSCAR_CONFIG||{};
-let db=null;
 let accountSession=null;
 
 const $=s=>document.querySelector(s);
-
-async function loadRuntimeConfig(){
-  try{
-    const r=await fetch('/api/public-config',{cache:'no-store'});
-    if(r.ok) cfg={...cfg,...await r.json()};
-  }catch{}
-  const key=cfg.supabasePublishableKey||cfg.supabaseAnonKey;
-  if(!cfg.supabaseUrl||cfg.supabaseUrl==='demo'||!key||key==='demo'||!window.supabase){
-    throw new Error('L’espace client n’est pas encore connecté à la base en ligne.');
-  }
-  db=window.supabase.createClient(cfg.supabaseUrl,key);
-}
 
 function showOnly(id){
   ['accountLoading','accountLogin','accountView'].forEach(x=>$('#'+x)?.classList.toggle('hidden',x!==id));
@@ -33,11 +19,9 @@ function startLoginCooldown(seconds=60){
   const btn=$('#accountLoginBtn');
   if(!btn) return;
   if(loginCooldownTimer) clearInterval(loginCooldownTimer);
-
   let remaining=Math.max(1,Number(seconds)||60);
   btn.disabled=true;
   btn.textContent=`Renvoyer dans ${remaining}s`;
-
   loginCooldownTimer=setInterval(()=>{
     remaining-=1;
     if(remaining<=0){
@@ -70,12 +54,15 @@ function formatDate(iso){
   const time=new Intl.DateTimeFormat('fr-FR',{
     timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'
   }).format(d);
-  const clean=date.charAt(0).toUpperCase()+date.slice(1);
-  return {date:clean,time};
+  return {date:date.charAt(0).toUpperCase()+date.slice(1),time};
 }
 
 function euro(cents){
   return (Number(cents||0)/100).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
+}
+
+function escapeHtml(v=''){
+  return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 }
 
 function appointmentCard(a){
@@ -101,14 +88,7 @@ function appointmentCard(a){
   </article>`;
 }
 
-function escapeHtml(v=''){
-  return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-}
-
-async function loadAppointments(){
-  const {data,error}=await db.rpc('get_my_appointments');
-  if(error) throw error;
-  const rows=data||[];
+function renderAppointments(rows=[]){
   const now=Date.now();
   const upcoming=rows
     .filter(a=>['pending','confirmed'].includes(a.status)&&new Date(a.starts_at).getTime()>=now)
@@ -126,24 +106,20 @@ async function loadAppointments(){
     : '<div class="empty-state compact"><span>Ton historique apparaîtra ici.</span></div>';
 }
 
-async function showAccount(session){
-  accountSession=session;
-  $('#accountUserEmail').textContent=session.user.email||'';
-  showOnly('accountView');
-
-  try{
-    const {data:claimed,error:claimError}=await db.rpc('claim_customer_appointments');
-    if(claimError) throw claimError;
-    const n=Number(claimed||0);
-    if(n>0){
-      const el=$('#accountClaimNotice');
-      el.textContent=n===1?'1 ancien rendez-vous a été ajouté à ton espace.':`${n} anciens rendez-vous ont été ajoutés à ton espace.`;
-      el.classList.remove('hidden');
-    }
-    await loadAppointments();
-  }catch(error){
-    $('#accountUpcoming').innerHTML=`<div class="empty-state"><strong>Impossible de charger tes rendez-vous.</strong><span>${escapeHtml(error.message||'Réessaie dans quelques instants.')}</span></div>`;
+async function loadAccount(){
+  const response=await fetch('/api/account-me',{cache:'no-store',credentials:'same-origin'});
+  if(response.status===401){
+    accountSession=null;
+    showOnly('accountLogin');
+    return false;
   }
+  const payload=await response.json().catch(()=>({}));
+  if(!response.ok) throw new Error(payload.error||'Impossible de charger ton espace.');
+  accountSession={email:payload.email};
+  $('#accountUserEmail').textContent=payload.email||'';
+  showOnly('accountView');
+  renderAppointments(payload.appointments||[]);
+  return true;
 }
 
 async function sendMagicLink(e){
@@ -158,13 +134,12 @@ async function sendMagicLink(e){
     const response=await fetch('/api/account-login',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
+      credentials:'same-origin',
       body:JSON.stringify({email})
     });
     const payload=await response.json().catch(()=>({}));
     if(!response.ok){
-      if(response.status===429){
-        startLoginCooldown(Number(payload.retryAfter||response.headers.get('Retry-After')||60));
-      }
+      if(response.status===429) startLoginCooldown(Number(payload.retryAfter||60));
       throw new Error(payload.error||'Impossible d’envoyer le lien de connexion.');
     }
     setLoginStatus('E-mail Oscar Blends envoyé depuis rdv.oscarblends@gmail.com. Ouvre-le puis clique sur « Accéder à mon espace ».',true);
@@ -179,33 +154,35 @@ async function sendMagicLink(e){
 }
 
 async function logout(){
-  await db.auth.signOut();
+  try{
+    await fetch('/api/account-logout',{method:'POST',credentials:'same-origin'});
+  }catch{}
   accountSession=null;
-  $('#accountClaimNotice').classList.add('hidden');
+  $('#accountClaimNotice')?.classList.add('hidden');
   showOnly('accountLogin');
 }
 
 document.addEventListener('DOMContentLoaded',async()=>{
+  $('#accountLoginForm').addEventListener('submit',sendMagicLink);
+  $('#accountLogout').addEventListener('click',logout);
+
+  const params=new URLSearchParams(location.search);
+  const loginState=params.get('login');
+  if(loginState) history.replaceState({},document.title,'/compte.html');
+
   try{
-    await loadRuntimeConfig();
-    $('#accountLoginForm').addEventListener('submit',sendMagicLink);
-    $('#accountLogout').addEventListener('click',logout);
-
-    const {data,error}=await db.auth.getSession();
-    if(error) throw error;
-    if(data.session){
-      if(location.hash||location.search.includes('code=')){
-        history.replaceState({},document.title,'/compte.html');
+    const authenticated=await loadAccount();
+    if(authenticated&&loginState==='success'){
+      const notice=$('#accountClaimNotice');
+      if(notice){
+        notice.textContent='Connexion réussie. Bienvenue dans ton espace Oscar Blends.';
+        notice.classList.remove('hidden');
       }
-      await showAccount(data.session);
-    }else{
-      showOnly('accountLogin');
+    }else if(!authenticated&&loginState==='invalid'){
+      setLoginStatus('Ce lien de connexion est invalide ou a expiré. Demande un nouveau lien.');
+    }else if(!authenticated&&loginState==='error'){
+      setLoginStatus('Impossible de te connecter avec ce lien. Demande un nouveau lien.');
     }
-
-    db.auth.onAuthStateChange((event,session)=>{
-      if(event==='SIGNED_IN'&&session&&session.user?.id!==accountSession?.user?.id) showAccount(session);
-      if(event==='SIGNED_OUT') showOnly('accountLogin');
-    });
   }catch(error){
     showOnly('accountLogin');
     setLoginStatus(error.message||'Impossible de charger l’espace client.');
