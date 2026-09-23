@@ -41,6 +41,9 @@
     },
     "api/email-test.js": {
       "maxDuration": 10
+    },
+    "api/account-login.js": {
+      "maxDuration": 10
     }
   },
   "crons": [
