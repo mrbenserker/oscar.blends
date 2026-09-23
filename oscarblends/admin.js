@@ -131,12 +131,12 @@ async function loadSettings(){
 async function loadServices(){
   if(isDemo){
     state.services=[
-      {slug:'classique',name:'Le Classique',price_cents:2200,duration_minutes:50},
+      {slug:'classique',name:'Le Classique',price_cents:2200,duration_minutes:40},
       {slug:'barbe-clean',name:'Barbe Clean',price_cents:1500,duration_minutes:30},
-      {slug:'barbe-old-school',name:'Barbe Old School',price_cents:2300,duration_minutes:50},
-      {slug:'ptit-blend',name:"Le P'tit Blend",price_cents:1500,duration_minutes:40},
-      {slug:'rituel-royal',name:'Le Rituel Royal',price_cents:3800,duration_minutes:75},
-      {slug:'gentleman',name:'Le Gentleman',price_cents:3200,duration_minutes:65},
+      {slug:'barbe-old-school',name:'Barbe Old School',price_cents:2300,duration_minutes:40},
+      {slug:'ptit-blend',name:"Le P'tit Blend",price_cents:1500,duration_minutes:30},
+      {slug:'rituel-royal',name:'Le Rituel Royal',price_cents:3800,duration_minutes:65},
+      {slug:'gentleman',name:'Le Gentleman',price_cents:3200,duration_minutes:50},
       {slug:'mise-a-zero',name:'La Mise à Zéro',price_cents:1900,duration_minutes:30}
     ];
     return;
