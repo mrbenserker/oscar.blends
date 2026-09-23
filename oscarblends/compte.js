@@ -139,7 +139,7 @@ async function sendMagicLink(e){
     });
     const payload=await response.json().catch(()=>({}));
     if(!response.ok) throw new Error(payload.error||'Impossible d’envoyer le lien de connexion.');
-    setLoginStatus('Lien Oscar Blends envoyé. Ouvre l’e-mail reçu puis clique sur « Accéder à mon espace ».',true);
+    setLoginStatus('E-mail Oscar Blends envoyé depuis rdv.oscarblends@gmail.com. Ouvre-le puis clique sur « Accéder à mon espace ».',true);
   }catch(error){
     setLoginStatus(error.message||'Impossible d’envoyer le lien de connexion.');
   }finally{
