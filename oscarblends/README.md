@@ -112,3 +112,18 @@ Routage Vercel renforcé : `/admin` et `/admin.html` ouvrent tous les deux l’e
 - Ajout d’une icône navigateur / raccourci mobile et d’un manifest.
 - Palette principale ajustée au vert `#3B7061` et au crème `#FAFAE7` des logos.
 - Aucun changement Supabase n’est nécessaire pour cette mise à jour visuelle.
+
+
+## V7 — Admin avancé
+
+Cette version ajoute :
+- un tableau de bord quotidien avec prochain client, demandes en attente et CA théorique confirmé ;
+- l'ajout manuel d'un rendez-vous depuis l'admin ;
+- le déplacement d'un rendez-vous avec contrôle anti-chevauchement ;
+- un annuaire clients construit automatiquement à partir des réservations ;
+- une fiche historique par client ;
+- la vue Agenda Aujourd'hui / Demain / 7 jours conservée.
+
+### Migration Supabase V7
+Après le déploiement, exécuter une seule fois `migration-v7.sql` dans Supabase > SQL Editor.
+Cette migration crée uniquement les fonctions administrateur nécessaires à l'ajout manuel et au déplacement des rendez-vous.
