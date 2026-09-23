@@ -177,3 +177,19 @@ Fonctionnement :
 2. Dans **Authentication > URL Configuration**, configurer l’URL publique du site comme **Site URL** et autoriser le retour vers `/compte.html` dans les **Redirect URLs**.
 3. Vérifier que l’envoi d’e-mails Supabase Auth est autorisé pour les connexions par lien magique.
 
+
+
+### E-mail de connexion personnalisé
+
+L'espace client n'utilise plus l'e-mail Magic Link générique envoyé par le SMTP Supabase.
+
+Le formulaire `/compte` appelle `/api/account-login` :
+- Supabase Auth génère uniquement le lien sécurisé de type magic link ;
+- l'e-mail est envoyé avec le même compte Gmail que les confirmations de rendez-vous ;
+- expéditeur par défaut : `Oscar Blends <GMAIL_USER>` ;
+- objet : `Ton lien de connexion — Oscar Blends` ;
+- le contenu est entièrement aux couleurs Oscar Blends ;
+- la redirection finale reste `/compte.html`.
+
+Exécuter `migration-account-email-branding.sql` pour activer le rate-limit persistant par e-mail. Sans cette migration, l'API conserve un garde-fou temporaire en mémoire.
+
