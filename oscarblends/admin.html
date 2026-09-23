@@ -37,6 +37,7 @@
           </div>
         </div>
         <div class="admin-top-actions">
+          <button id="openManualBtn" class="btn btn-primary btn-small" type="button">+ Ajouter un RDV</button>
           <a href="index.html" class="btn btn-secondary btn-small">Voir le site</a>
           <button id="logoutBtn" class="btn btn-secondary btn-small" type="button">Déconnexion</button>
         </div>
@@ -44,21 +45,45 @@
 
       <div id="adminFlash" class="status-box" role="status" aria-live="polite"></div>
 
-      <section class="admin-metrics" aria-label="Résumé du planning">
+      <section class="admin-metrics admin-metrics-v7" aria-label="Résumé du planning">
         <article><span>Aujourd’hui</span><strong id="metricToday">0</strong><small>rendez-vous actifs</small></article>
+        <article><span>Prochain client</span><strong id="metricNext">—</strong><small id="metricNextName">Aucun à venir</small></article>
+        <article><span>CA prévu aujourd’hui</span><strong id="metricRevenue">0 €</strong><small>rendez-vous confirmés</small></article>
         <article><span>En attente</span><strong id="metricPending">0</strong><small>demandes à traiter</small></article>
-        <article><span>Cette semaine</span><strong id="metricWeek">0</strong><small>rendez-vous actifs</small></article>
       </section>
 
       <nav class="admin-nav" aria-label="Navigation de l’espace pro">
-        <button type="button" class="admin-nav-btn active" data-admin-view="agenda">Agenda</button>
+        <button type="button" class="admin-nav-btn active" data-admin-view="dashboard">Accueil</button>
+        <button type="button" class="admin-nav-btn" data-admin-view="agenda">Agenda</button>
         <button type="button" class="admin-nav-btn" data-admin-view="requests">Demandes <span id="pendingPill" class="nav-pill">0</span></button>
+        <button type="button" class="admin-nav-btn" data-admin-view="clients">Clients</button>
         <button type="button" class="admin-nav-btn" data-admin-view="closures">Indisponibilités</button>
         <button type="button" class="admin-nav-btn" data-admin-view="settings">Réglages</button>
       </nav>
 
       <main class="admin-main">
-        <section class="admin-view" data-view-panel="agenda">
+        <section class="admin-view" data-view-panel="dashboard">
+          <div class="admin-section-head">
+            <div><p class="panel-kicker">Aujourd’hui</p><h2>Ton tableau de bord.</h2><p>Les informations utiles pour organiser ta journée sans chercher dans tout le planning.</p></div>
+            <button id="dashboardAddBtn" class="btn btn-primary btn-small" type="button">+ Ajouter un rendez-vous</button>
+          </div>
+          <div class="dashboard-grid">
+            <article class="admin-card dashboard-card dashboard-next">
+              <span class="dashboard-label">Prochain rendez-vous</span>
+              <div id="dashboardNext"></div>
+            </article>
+            <article class="admin-card dashboard-card">
+              <span class="dashboard-label">Résumé du jour</span>
+              <div id="dashboardSummary" class="dashboard-summary"></div>
+            </article>
+          </div>
+          <div class="admin-card dashboard-day-card">
+            <div class="dashboard-day-head"><div><span class="dashboard-label">Planning du jour</span><h3 id="dashboardDate"></h3></div><button type="button" class="text-button" data-go-agenda>Voir l’agenda</button></div>
+            <div id="dashboardTodayList" class="agenda-day-items"></div>
+          </div>
+        </section>
+
+        <section class="admin-view hidden" data-view-panel="agenda">
           <div class="admin-section-head">
             <div><p class="panel-kicker">Agenda</p><h2>Ta journée en un coup d’œil.</h2></div>
             <div class="segmented" id="agendaRange">
@@ -75,6 +100,17 @@
             <div><p class="panel-kicker">Demandes</p><h2>À confirmer ou refuser.</h2><p>Une demande en attente bloque déjà son créneau pour les autres clients.</p></div>
           </div>
           <div id="requestList" class="agenda-list"></div>
+        </section>
+
+        <section class="admin-view hidden" data-view-panel="clients">
+          <div class="admin-section-head">
+            <div><p class="panel-kicker">Clients</p><h2>Historique et habitudes.</h2><p>Retrouve rapidement les coordonnées, les prestations passées et les prochains rendez-vous.</p></div>
+          </div>
+          <div class="client-search-row">
+            <input id="clientSearch" type="search" placeholder="Rechercher par nom, téléphone ou e-mail">
+            <span id="clientCount" class="small"></span>
+          </div>
+          <div id="clientList" class="client-list"></div>
         </section>
 
         <section class="admin-view hidden" data-view-panel="closures">
@@ -145,6 +181,46 @@
       </main>
     </section>
   </div>
+
+  <dialog id="manualAppointmentDialog" class="admin-dialog">
+    <form id="manualAppointmentForm" class="dialog-card">
+      <div class="dialog-head"><div><p class="panel-kicker">Nouveau rendez-vous</p><h2>Ajouter un client au planning</h2></div><button type="button" class="dialog-close" data-close-dialog="manualAppointmentDialog" aria-label="Fermer">×</button></div>
+      <div class="dialog-grid">
+        <div class="field dialog-span-2"><label for="manualService">Prestation</label><select id="manualService" required></select></div>
+        <div class="field"><label for="manualDate">Date</label><input id="manualDate" type="date" required></div>
+        <div class="field"><label for="manualTime">Heure</label><input id="manualTime" type="time" step="300" required></div>
+        <div class="field"><label for="manualFirstName">Prénom</label><input id="manualFirstName" required autocomplete="given-name"></div>
+        <div class="field"><label for="manualLastName">Nom</label><input id="manualLastName" required autocomplete="family-name"></div>
+        <div class="field"><label for="manualPhone">Téléphone</label><input id="manualPhone" type="tel" required autocomplete="tel"></div>
+        <div class="field"><label for="manualEmail">E-mail</label><input id="manualEmail" type="email" required autocomplete="email"></div>
+        <div class="field dialog-span-2"><label for="manualNotes">Note <span class="muted-label">facultatif</span></label><textarea id="manualNotes" rows="3" placeholder="Ex. réservation prise par téléphone"></textarea></div>
+      </div>
+      <div id="manualAppointmentPreview" class="dialog-preview"></div>
+      <div class="dialog-actions"><button type="button" class="btn btn-secondary" data-close-dialog="manualAppointmentDialog">Annuler</button><button type="submit" class="btn btn-primary">Ajouter au planning</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="moveAppointmentDialog" class="admin-dialog">
+    <form id="moveAppointmentForm" class="dialog-card">
+      <input id="moveAppointmentId" type="hidden">
+      <div class="dialog-head"><div><p class="panel-kicker">Déplacer</p><h2>Changer le créneau</h2><p id="moveAppointmentLabel" class="small"></p></div><button type="button" class="dialog-close" data-close-dialog="moveAppointmentDialog" aria-label="Fermer">×</button></div>
+      <div class="dialog-grid">
+        <div class="field"><label for="moveDate">Nouvelle date</label><input id="moveDate" type="date" required></div>
+        <div class="field"><label for="moveTime">Nouvelle heure</label><input id="moveTime" type="time" step="300" required></div>
+      </div>
+      <div id="moveAppointmentPreview" class="dialog-preview"></div>
+      <div class="dialog-actions"><button type="button" class="btn btn-secondary" data-close-dialog="moveAppointmentDialog">Annuler</button><button type="submit" class="btn btn-primary">Déplacer le rendez-vous</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="clientHistoryDialog" class="admin-dialog">
+    <div class="dialog-card">
+      <div class="dialog-head"><div><p class="panel-kicker">Fiche client</p><h2 id="clientHistoryName">Client</h2><p id="clientHistoryContact" class="small"></p></div><button type="button" class="dialog-close" data-close-dialog="clientHistoryDialog" aria-label="Fermer">×</button></div>
+      <div id="clientHistoryStats" class="client-history-stats"></div>
+      <div id="clientHistoryList" class="client-history-list"></div>
+      <div class="dialog-actions"><button type="button" class="btn btn-secondary" data-close-dialog="clientHistoryDialog">Fermer</button></div>
+    </div>
+  </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
