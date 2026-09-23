@@ -21,6 +21,8 @@ jobs:
           node --check admin-v8.js
           node --check manage.js
           node --check api/public-config.js
+          node --check api/_mailer.js
+          node --check api/email-test.js
           node --check api/appointment-action.js
           node --check api/manage-appointment.js
           node --check api/automation.js
