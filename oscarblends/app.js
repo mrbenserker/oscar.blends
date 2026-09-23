@@ -1,10 +1,10 @@
 const SERVICES = [
-  {id:'classique',category:'coupe',name:'Le Classique',price:22,duration:50,display:'50 min',desc:'Coupe signature adaptée au coiffage, conseils personnalisés et finition produit.'},
+  {id:'classique',category:'coupe',name:'Le Classique',price:22,duration:40,display:'40 min',desc:'Coupe signature adaptée au coiffage, conseils personnalisés et finition produit.'},
   {id:'barbe-clean',category:'barber',name:'Barbe Clean',price:15,duration:30,display:'30 min',desc:"Taille de barbe à la tondeuse avec finitions nettes et conseils d’entretien."},
-  {id:'barbe-old-school',category:'barber',name:'Barbe Old School',price:23,duration:50,display:'50 min',desc:"Taille de barbe, rasage à l’ancienne et serviettes chaudes."},
-  {id:'ptit-blend',category:'coupe',name:"Le P'tit Blend",price:15,duration:40,display:'40 min',desc:"Coupe garçon de 2 à 12 ans avec finitions propres et naturelles."},
-  {id:'rituel-royal',category:'coupe-barbe',name:'Le Rituel Royal',price:38,duration:75,display:'1 h 15',desc:"Coupe signature, taille de barbe et rasage à l’ancienne à la serviette chaude."},
-  {id:'gentleman',category:'coupe-barbe',name:'Le Gentleman',price:32,duration:65,display:'65 min',desc:"Coupe signature + taille de barbe, mise en forme complète et conseils."},
+  {id:'barbe-old-school',category:'barber',name:'Barbe Old School',price:23,duration:40,display:'40 min',desc:"Taille de barbe, rasage à l’ancienne et serviettes chaudes."},
+  {id:'ptit-blend',category:'coupe',name:"Le P'tit Blend",price:15,duration:30,display:'30 min',desc:"Coupe garçon de 2 à 12 ans avec finitions propres et naturelles."},
+  {id:'rituel-royal',category:'coupe-barbe',name:'Le Rituel Royal',price:38,duration:65,display:'65 min',desc:"Coupe signature, taille de barbe et rasage à l’ancienne à la serviette chaude."},
+  {id:'gentleman',category:'coupe-barbe',name:'Le Gentleman',price:32,duration:50,display:'50 min',desc:"Coupe signature + taille de barbe, mise en forme complète et conseils."},
   {id:'mise-a-zero',category:'coupe',name:'La Mise à Zéro',price:19,duration:30,display:'30 min',desc:'Rasage intégral avec soins apaisants et finition nette.'}
 ];
 
