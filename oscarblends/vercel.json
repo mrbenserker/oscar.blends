@@ -1,11 +1,41 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/admin/", "destination": "/admin.html" }
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/admin/",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/manage",
+      "destination": "/manage.html"
+    },
+    {
+      "source": "/manage/",
+      "destination": "/manage.html"
+    }
   ],
   "functions": {
-    "api/appointment-action.js": { "maxDuration": 10 },
-    "api/public-config.js": { "maxDuration": 10 }
-  }
+    "api/appointment-action.js": {
+      "maxDuration": 10
+    },
+    "api/public-config.js": {
+      "maxDuration": 10
+    },
+    "api/manage-appointment.js": {
+      "maxDuration": 10
+    },
+    "api/automation.js": {
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/automation",
+      "schedule": "0 * * * *"
+    }
+  ]
 }
