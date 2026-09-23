@@ -26,7 +26,12 @@ function applyBookingLimitsV8(){
 
 function preselectServiceV8(){
   const slug=new URLSearchParams(location.search).get('service');
-  if(!slug) return;
+  if(!slug||selectedService) return;
+  const service=SERVICES.find(s=>s.id===slug);
+  if(service?.category&&activeServiceCategory!==service.category){
+    activeServiceCategory=service.category;
+    baseRenderServicesV8();
+  }
   const card=document.querySelector(`.service-card[data-service="${CSS.escape(slug)}"]`);
   if(card&&!selectedService) card.click();
 }
