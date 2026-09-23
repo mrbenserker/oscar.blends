@@ -890,12 +890,14 @@ body{
     width:100%;
     scroll-snap-align:start;
     scroll-snap-stop:always;
-    aspect-ratio:3/4;
+    aspect-ratio:auto;
+    background:#234a42;
   }
 
   .photo-slot img{
+    display:block;
     width:100%;
-    height:100%;
-    object-fit:cover;
+    height:auto;
+    object-fit:contain;
   }
 }
