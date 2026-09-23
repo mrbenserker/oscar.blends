@@ -3,7 +3,7 @@ let db=null;
 let token='';
 let appointment=null;
 let selectedMoveSlot=null;
-let bookingRules={min_notice_minutes:120,max_advance_days:60};
+let bookingRules={min_notice_minutes:15,max_advance_days:60};
 
 const $=s=>document.querySelector(s);
 
