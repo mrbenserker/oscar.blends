@@ -1,0 +1,29 @@
+name: Validate Oscar Blends
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        working-directory: oscarblends
+        run: |
+          node --check app.js
+          node --check app-v8.js
+          node --check admin.js
+          node --check admin-v8.js
+          node --check manage.js
+          node --check api/public-config.js
+          node --check api/appointment-action.js
+          node --check api/manage-appointment.js
+          node --check api/automation.js
+      - name: Check Vercel configuration
+        working-directory: oscarblends
+        run: python -m json.tool vercel.json >/dev/null
