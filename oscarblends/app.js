@@ -1,11 +1,11 @@
 const SERVICES = [
-  {id:'classique',name:'Le Classique',price:22,duration:50,display:'30–50 min',desc:'Coupe signature adaptée au coiffage, conseils personnalisés et finition produit.'},
-  {id:'barbe-clean',name:'Barbe Clean',price:15,duration:30,display:'30 min',desc:"Taille de barbe à la tondeuse avec finitions nettes et conseils d’entretien."},
-  {id:'barbe-old-school',name:'Barbe Old School',price:23,duration:50,display:'30–50 min',desc:"Taille de barbe, rasage à l’ancienne et serviettes chaudes."},
-  {id:'ptit-blend',name:"Le P'tit Blend",price:15,duration:40,display:'30–40 min',desc:"Coupe garçon de 2 à 12 ans avec finitions propres et naturelles."},
-  {id:'rituel-royal',name:'Le Rituel Royal',price:38,duration:75,display:'1 h 15',desc:"Coupe signature, taille de barbe et rasage à l’ancienne à la serviette chaude."},
-  {id:'gentleman',name:'Le Gentleman',price:32,duration:65,display:'45–65 min',desc:"Coupe signature + taille de barbe, mise en forme complète et conseils."},
-  {id:'mise-a-zero',name:'La Mise à Zéro',price:19,duration:30,display:'30 min',desc:'Rasage intégral avec soins apaisants et finition nette.'}
+  {id:'classique',category:'coupe',name:'Le Classique',price:22,duration:50,display:'30–50 min',desc:'Coupe signature adaptée au coiffage, conseils personnalisés et finition produit.'},
+  {id:'barbe-clean',category:'barber',name:'Barbe Clean',price:15,duration:30,display:'30 min',desc:"Taille de barbe à la tondeuse avec finitions nettes et conseils d’entretien."},
+  {id:'barbe-old-school',category:'barber',name:'Barbe Old School',price:23,duration:50,display:'30–50 min',desc:"Taille de barbe, rasage à l’ancienne et serviettes chaudes."},
+  {id:'ptit-blend',category:'coupe',name:"Le P'tit Blend",price:15,duration:40,display:'30–40 min',desc:"Coupe garçon de 2 à 12 ans avec finitions propres et naturelles."},
+  {id:'rituel-royal',category:'coupe-barbe',name:'Le Rituel Royal',price:38,duration:75,display:'1 h 15',desc:"Coupe signature, taille de barbe et rasage à l’ancienne à la serviette chaude."},
+  {id:'gentleman',category:'coupe-barbe',name:'Le Gentleman',price:32,duration:65,display:'45–65 min',desc:"Coupe signature + taille de barbe, mise en forme complète et conseils."},
+  {id:'mise-a-zero',category:'coupe',name:'La Mise à Zéro',price:19,duration:30,display:'30 min',desc:'Rasage intégral avec soins apaisants et finition nette.'}
 ];
 
 let cfg = window.OSCAR_CONFIG || {};
@@ -16,6 +16,7 @@ let selectedDate = null;
 let selectedSlot = null;
 let currentStep = 1;
 let lastManagementToken = null;
+let activeServiceCategory = 'coupe';
 
 const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
@@ -157,13 +158,20 @@ function demoSlots(date){
 }
 
 function renderServices(){
-  $('#servicesGrid').innerHTML=SERVICES.map(s=>`<button type="button" class="service-card" data-service="${s.id}" aria-label="Choisir ${s.name}, ${s.price} euros, ${s.display}">
+  const visibleServices=SERVICES.filter(s=>s.category===activeServiceCategory);
+  $('[data-service-category]').forEach(btn=>{
+    const active=btn.dataset.serviceCategory===activeServiceCategory;
+    btn.classList.toggle('active',active);
+    btn.setAttribute('aria-selected',active?'true':'false');
+  });
+
+  $('#servicesGrid').innerHTML=visibleServices.map(s=>`<button type="button" class="service-card" data-service="${s.id}" aria-label="Choisir ${s.name}, ${s.price} euros, ${s.display}">
     <div class="service-main"><span class="service-name">${s.name}</span><span class="service-meta"><span>${s.display}</span><span>·</span><span>Sur demande</span></span></div>
     <span class="service-price">${s.price} €</span>
     <p class="service-desc">${s.desc}</p>
   </button>`).join('');
 
-  $$('.service-card').forEach(card=>card.addEventListener('click',()=>{
+  $('.service-card').forEach(card=>card.addEventListener('click',()=>{
     selectedService=SERVICES.find(s=>s.id===card.dataset.service);
     selectedDate=null;
     selectedSlot=null;
@@ -382,6 +390,10 @@ function initGalleryFallback(){
 
 document.addEventListener('DOMContentLoaded',async()=>{
   await loadRuntimeConfig();
+  $('[data-service-category]').forEach(btn=>btn.addEventListener('click',()=>{
+    activeServiceCategory=btn.dataset.serviceCategory;
+    renderServices();
+  }));
   renderServices(); renderDays(); initGalleryFallback();
   const dateInput=$('#dateInput');
   dateInput.min=localDateKey(new Date());
