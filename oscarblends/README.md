@@ -127,3 +127,33 @@ Cette version ajoute :
 ### Migration Supabase V7
 Après le déploiement, exécuter une seule fois `migration-v7.sql` dans Supabase > SQL Editor.
 Cette migration crée uniquement les fonctions administrateur nécessaires à l'ajout manuel et au déplacement des rendez-vous.
+
+
+## V8 — Finalisation des 15 améliorations
+
+La V8 complète les fonctions restantes :
+- lien privé client pour déplacer ou annuler un rendez-vous ;
+- rappel automatique la veille et alerte de liste d'attente dès que l'e-mail est configuré ;
+- bouton pour reprendre la même prestation ;
+- vraie vue planning verticale avec blocs proportionnels aux durées ;
+- statuts Terminé et Absent ;
+- statistiques d'activité ;
+- liste d'attente ;
+- ouvertures exceptionnelles par date ;
+- délai minimum et nombre de jours maximum de réservation ;
+- temps de battement configurable par prestation ;
+- page de confirmation avec lien de gestion ;
+- ajout au calendrier depuis la page de gestion.
+
+### Mise à jour Supabase
+Exécuter une seule fois `migration-v8.sql` dans Supabase > SQL Editor après le déploiement.
+
+### Automatisations e-mail
+Le code est prêt dans `api/automation.js`. Les envois restent volontairement inactifs tant que la messagerie n'est pas configurée.
+Variables Vercel nécessaires pour les activer :
+- `GMAIL_USER`
+- `GMAIL_APP_PASSWORD`
+- `CRON_SECRET` (une valeur longue et aléatoire)
+- facultatif : `SITE_URL` si une URL personnalisée doit remplacer l'URL de production Vercel.
+
+Le cron Vercel est planifié chaque soir à 18:00 UTC.
