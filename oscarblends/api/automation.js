@@ -1,3 +1,4 @@
+const {createMailer}=require('./_mailer');
 function json(res,status,payload){
   res.status(status).setHeader('Content-Type','application/json; charset=utf-8');
   res.setHeader('Cache-Control','no-store');
@@ -34,15 +35,8 @@ function fmtDate(iso){
   return {date:date.charAt(0).toUpperCase()+date.slice(1),time};
 }
 
-async function transporter(){
-  const user=String(process.env.GMAIL_USER||'').trim();
-  const pass=String(process.env.GMAIL_APP_PASSWORD||'').replace(/\s+/g,'');
-  if(!user||!pass) return null;
-  const nodemailer=require('nodemailer');
-  return {
-    user,
-    tx:nodemailer.createTransport({host:'smtp.gmail.com',port:465,secure:true,auth:{user,pass}})
-  };
+function transporter(){
+  return createMailer();
 }
 
 async function sendReminder(mail,a){
@@ -52,7 +46,7 @@ async function sendReminder(mail,a){
   const subject=`Rappel Oscar Blends — demain à ${when.time}`;
   const html=`<!doctype html><html lang="fr"><body style="margin:0;background:#f4f1e8;font-family:Arial,sans-serif;color:#1f2b27"><div style="max-width:620px;margin:auto;padding:28px 18px"><div style="background:#18352d;color:#fff;padding:24px;border-radius:18px 18px 0 0"><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.75">Oscar Blends</div><h1 style="margin:9px 0 0;font-size:24px">Petit rappel pour demain</h1></div><div style="background:#fff;padding:26px;border-radius:0 0 18px 18px"><p>Bonjour ${esc(a.customer_name||'')},</p><p>Ton rendez-vous <strong>${esc(s.name||'Oscar Blends')}</strong> est prévu <strong>${esc(when.date)} à ${esc(when.time)}</strong>.</p>${manage?`<p><a href="${esc(manage)}" style="display:inline-block;background:#3b7061;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-weight:700">Gérer mon rendez-vous</a></p>`:''}<p>À demain,<br><strong>Oscar Blends</strong></p></div></div></body></html>`;
   const text=`Bonjour ${a.customer_name||''},\n\nRappel : ton rendez-vous Oscar Blends est prévu ${when.date} à ${when.time}.\nPrestation : ${s.name||'Prestation'}.${manage?`\nGérer le rendez-vous : ${manage}`:''}\n\nÀ demain,\nOscar Blends`;
-  await mail.tx.sendMail({from:`Oscar Blends <${mail.user}>`,replyTo:mail.user,to:a.email,subject,html,text});
+  await mail.send({to:a.email,subject,html,text});
 }
 
 async function processReminders(mail){
@@ -93,7 +87,7 @@ async function sendWaitlistNotice(mail,w){
   const subject=`Une place est disponible chez Oscar Blends — ${dateLabel}`;
   const html=`<!doctype html><html lang="fr"><body style="margin:0;background:#f4f1e8;font-family:Arial,sans-serif;color:#1f2b27"><div style="max-width:620px;margin:auto;padding:28px 18px"><div style="background:#18352d;color:#fff;padding:24px;border-radius:18px 18px 0 0"><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.75">Oscar Blends</div><h1 style="margin:9px 0 0;font-size:24px">Une place vient de se libérer</h1></div><div style="background:#fff;padding:26px;border-radius:0 0 18px 18px"><p>Bonjour ${esc(w.customer_name||'')},</p><p>Un créneau est de nouveau disponible le <strong>${esc(dateLabel)}</strong> pour <strong>${esc(service.name||'ta prestation')}</strong>.</p><p>Les créneaux restent disponibles au premier arrivé.</p>${booking?`<p><a href="${esc(booking)}" style="display:inline-block;background:#3b7061;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-weight:700">Voir les créneaux</a></p>`:''}</div></div></body></html>`;
   const text=`Bonjour ${w.customer_name||''},\n\nUne place est disponible le ${dateLabel} pour ${service.name||'ta prestation'}.${booking?`\nVoir les créneaux : ${booking}`:''}\n\nOscar Blends`;
-  await mail.tx.sendMail({from:`Oscar Blends <${mail.user}>`,replyTo:mail.user,to:w.email,subject,html,text});
+  await mail.send({to:w.email,subject,html,text});
 }
 
 async function processWaitlist(mail){
