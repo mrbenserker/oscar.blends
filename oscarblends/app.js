@@ -399,6 +399,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   dateInput.min=localDateKey(new Date());
   dateInput.addEventListener('change',()=>{ if(dateInput.value) selectDate(dateInput.value); });
   $('#changeService').addEventListener('click',()=>goToStep(1,true));
+  $('#backToServices')?.addEventListener('click',()=>goToStep(1,true));
   $('#backToSlots').addEventListener('click',()=>goToStep(2,true));
   $('#bookingForm').addEventListener('submit',submitBooking);
   $('#mobileSubmit').addEventListener('click',()=>$('#bookingForm').requestSubmit());
