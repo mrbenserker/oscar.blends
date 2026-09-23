@@ -159,7 +159,7 @@ function demoSlots(date){
 
 function renderServices(){
   const visibleServices=SERVICES.filter(s=>s.category===activeServiceCategory);
-  $('[data-service-category]').forEach(btn=>{
+  $$('[data-service-category]').forEach(btn=>{
     const active=btn.dataset.serviceCategory===activeServiceCategory;
     btn.classList.toggle('active',active);
     btn.setAttribute('aria-selected',active?'true':'false');
@@ -171,7 +171,7 @@ function renderServices(){
     <p class="service-desc">${s.desc}</p>
   </button>`).join('');
 
-  $('.service-card').forEach(card=>card.addEventListener('click',()=>{
+  $$('.service-card').forEach(card=>card.addEventListener('click',()=>{
     selectedService=SERVICES.find(s=>s.id===card.dataset.service);
     selectedDate=null;
     selectedSlot=null;
@@ -390,7 +390,7 @@ function initGalleryFallback(){
 
 document.addEventListener('DOMContentLoaded',async()=>{
   await loadRuntimeConfig();
-  $('[data-service-category]').forEach(btn=>btn.addEventListener('click',()=>{
+  $$('[data-service-category]').forEach(btn=>btn.addEventListener('click',()=>{
     activeServiceCategory=btn.dataset.serviceCategory;
     renderServices();
   }));
