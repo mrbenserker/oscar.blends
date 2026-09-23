@@ -3,8 +3,8 @@
   "short_name": "Oscar Blends",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fafae7",
-  "theme_color": "#3b7061",
+  "background_color": "#efe3d2",
+  "theme_color": "#efe3d2",
   "icons": [
     {
       "src": "/assets/icon-192.png",
