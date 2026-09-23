@@ -158,7 +158,7 @@ function demoSlots(date){
 }
 
 function renderServices(){
-  const visibleServices=SERVICES.filter(s=>s.category===activeServiceCategory);
+  const visibleServices=SERVICES.filter(s=>s.category===activeServiceCategory).sort((a,b)=>a.price-b.price);
   $$('[data-service-category]').forEach(btn=>{
     const active=btn.dataset.serviceCategory===activeServiceCategory;
     btn.classList.toggle('active',active);
