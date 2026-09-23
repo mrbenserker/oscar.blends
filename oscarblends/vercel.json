@@ -44,6 +44,15 @@
     },
     "api/account-login.js": {
       "maxDuration": 10
+    },
+    "api/account-auth.js": {
+      "maxDuration": 10
+    },
+    "api/account-me.js": {
+      "maxDuration": 10
+    },
+    "api/account-logout.js": {
+      "maxDuration": 10
     }
   },
   "crons": [
@@ -91,6 +100,33 @@
     },
     {
       "source": "/api/account-login",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/account-auth",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/account-me",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/account-logout",
       "headers": [
         {
           "key": "Cache-Control",
